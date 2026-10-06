@@ -94,6 +94,7 @@ var ME = '';
 var TAB = 'cmd';
 var SEL = 'ALL';
 var CH = {};
+var MX = { state: '', cat: '', size: '', seller: '', buyer: '', product: '', designation: '', brand: '', src: '' };
 
 var $ = function(id){ return document.getElementById(id); };
 
@@ -122,8 +123,21 @@ var CATS = [
   ['Plain / Adhesive', /blank|plain|adhesive|self|paper|sticker|label/i]
 ];
 
+var BRANDS = ['AKHIL','CORAL','NOVAJET','DESMAT','BRADY','CHECKO','GOLDCOLT','ODDY','RAJSON','TARSONS','RAINBOW','VLLPL','LABELKART','SAIRAKESH','DOOKS','SKMPPL','AADO','ROLLY','TG TECHNO GRAPHICS','M S PAPER ROLL','HAUSER','3M','AVERY BRAND','AVERY','super max','Texlabels','JIRAWALA PAPERS','PCAKG','swastic','SPECIALITY LABELS','Stickmore','Kores','kores','STICKMORE'];
+
+/* ⚠️  THE MISSING LINE — now added */
 var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var BANDS = [[1,50],[51,200],[201,1000],[1001,5000],[5001,1e12]];
+
+function brand(p){
+  var up = String(p).toUpperCase();
+  for (var i = 0; i < BRANDS.length; i++){
+    if (up.indexOf(BRANDS[i].toUpperCase()) === 0) return BRANDS[i];
+    if (up.indexOf(BRANDS[i].toUpperCase() + ' ') >= 0) return BRANDS[i];
+  }
+  var m = String(p).match(/^([A-Z][A-Za-z0-9\-]{2,20})/);
+  return m ? m[1].toUpperCase() : '(unbranded)';
+}
 
 function cat(p){
   for (var i = 0; i < CATS.length; i++) if (CATS[i][1].test(p)) return CATS[i][0];
@@ -197,7 +211,7 @@ function cleanRow(r){
     seller: ct(r['Seller Company Name']),
     sg: gst(r['Seller GSTIN']),
     ss: parseState(r['Seller Address']),
-    prod: p, cat: cat(p), size: size(p),
+    prod: p, cat: cat(p), size: size(p), brand: brand(p),
     qty: q, unit: u, total: t > 0 ? t : q * u, src: tender(pdf)
   };
 }
@@ -465,6 +479,27 @@ function watchlist(rows){
     if (recent[i].total >= 1e5) alerts.push({ t: 'g', m: 'Large recent order: <b>' + fm(recent[i].total) + '</b> — ' + esc(recent[i].bd || recent[i].bg) + ' in ' + esc(recent[i].bs) });
   }
   return alerts.slice(0, 15);
+}
+
+function mxRows(rows){
+  return rows.filter(function(r){
+    if (MX.state && r.bs !== MX.state) return false;
+    if (MX.cat && r.cat !== MX.cat) return false;
+    if (MX.size && r.size !== MX.size) return false;
+    if (MX.seller && sk(r) !== MX.seller) return false;
+    if (MX.buyer && (r.bg || r.bd) !== MX.buyer) return false;
+    if (MX.product && r.prod !== MX.product) return false;
+    if (MX.designation && r.bd !== MX.designation) return false;
+    if (MX.brand && r.brand !== MX.brand) return false;
+    if (MX.src && r.src !== MX.src) return false;
+    return true;
+  });
+}
+
+function mxActiveCount(){
+  var n = 0;
+  Object.keys(MX).forEach(function(k){ if (MX[k]) n++; });
+  return n;
 }
 
 /* ============ VIEWS ============ */
@@ -762,6 +797,191 @@ function vDelta(){
   return html;
 }
 
+function vAnalyst(){
+  var R = mxRows(F);
+
+  function opts(dim, values){
+    var o = '<option value="">All</option>';
+    values.slice(0, 500).forEach(function(v){
+      o += '<option value="' + esc(v) + '"' + (MX[dim] === v ? ' selected' : '') + '>' + esc(String(v).slice(0, 60)) + '</option>';
+    });
+    return o;
+  }
+  function uniqueSorted(keyFn){
+    var set = new Set();
+    for (var i = 0; i < F.length; i++){
+      var v = keyFn(F[i]);
+      if (v && v !== 'Unknown' && v !== '(no size)') set.add(v);
+    }
+    var arr = Array.from(set);
+    arr.sort();
+    return arr;
+  }
+
+  var states = uniqueSorted(function(r){ return r.bs; });
+  var cats = uniqueSorted(function(r){ return r.cat; });
+  var sizes = uniqueSorted(function(r){ return r.size; });
+  var sellerK = uniqueSorted(function(r){ return sk(r); });
+  var buyersK = uniqueSorted(function(r){ return r.bg || r.bd; });
+  var products = uniqueSorted(function(r){ return r.prod; });
+  var desigs = uniqueSorted(function(r){ return r.bd; });
+  var brands = uniqueSorted(function(r){ return r.brand; });
+  var srcs = ['Bid','Direct','Unknown'];
+
+  var bar = '<div class="card">';
+  bar += '<h3>🔬 Master Analyst — drill into any slice</h3>';
+  bar += '<div class="mu">Combine any filters — everything recomputes live. Filters stack with AND.</div>';
+  bar += '<div class="bar" style="margin-top:10px">';
+  bar += '<label>State <select onchange="mxSet(\'state\',this.value)">' + opts('state', states) + '</select></label>';
+  bar += '<label>Type <select onchange="mxSet(\'cat\',this.value)">' + opts('cat', cats) + '</select></label>';
+  bar += '<label>Size <select onchange="mxSet(\'size\',this.value)">' + opts('size', sizes) + '</select></label>';
+  bar += '<label>Brand <select onchange="mxSet(\'brand\',this.value)">' + opts('brand', brands) + '</select></label>';
+  bar += '<label>Seller <select onchange="mxSet(\'seller\',this.value)">' + opts('seller', sellerK) + '</select></label>';
+  bar += '<label>Buyer <select onchange="mxSet(\'buyer\',this.value)">' + opts('buyer', buyersK) + '</select></label>';
+  bar += '<label>Designation <select onchange="mxSet(\'designation\',this.value)">' + opts('designation', desigs) + '</select></label>';
+  bar += '<label>Product <select onchange="mxSet(\'product\',this.value)">' + opts('product', products) + '</select></label>';
+  bar += '<label>Source <select onchange="mxSet(\'src\',this.value)">' + opts('src', srcs) + '</select></label>';
+  bar += '<button class="s" onclick="mxReset()">✕ Clear all (' + mxActiveCount() + ')</button>';
+  bar += '<button class="s" onclick="mxExportCSV()">⬇ Export this slice</button>';
+  bar += '</div></div>';
+
+  if (!R.length){
+    return bar + '<div class="card mu">No records match this combination. Try clearing a filter.</div>';
+  }
+
+  var tot = sum(R,'total'), n = R.length;
+  var nBuyers = new Set(R.map(function(r){ return r.bg || r.bd; })).size;
+  var nSellers = new Set(R.map(function(r){ return sk(r); })).size;
+  var nStates = new Set(R.map(function(r){ return r.bs; }).filter(function(s){ return s !== 'Unknown'; })).size;
+  var nProducts = new Set(R.map(function(r){ return r.prod; })).size;
+  var medP = ps(R).p50;
+
+  var kpis = '<div class="card"><div class="kpis">';
+  kpis += '<div class="kpi"><b>' + fm(tot) + '</b><span>Slice value</span></div>';
+  kpis += '<div class="kpi"><b>' + n + '</b><span>Orders</span></div>';
+  kpis += '<div class="kpi"><b>' + fm(tot/n) + '</b><span>Avg order</span></div>';
+  kpis += '<div class="kpi"><b>' + r2(medP) + '</b><span>Median unit ₹</span></div>';
+  kpis += '<div class="kpi"><b>' + nBuyers + '</b><span>Buyers</span></div>';
+  kpis += '<div class="kpi"><b>' + nSellers + '</b><span>Sellers</span></div>';
+  kpis += '<div class="kpi"><b>' + nStates + '</b><span>States</span></div>';
+  kpis += '<div class="kpi"><b>' + nProducts + '</b><span>Products</span></div>';
+  kpis += '</div></div>';
+
+  function breakdown(field, keyFn, label){
+    var m = grp(R, keyFn);
+    var rows = [];
+    m.forEach(function(l, k){
+      var v = sum(l,'total');
+      var buyers = new Set(), sellers = new Set(), states = new Set();
+      for (var i = 0; i < l.length; i++){
+        if (l[i].bg) buyers.add(l[i].bg);
+        sellers.add(sk(l[i]));
+        if (l[i].bs && l[i].bs !== 'Unknown') states.add(l[i].bs);
+      }
+      rows.push({ k: k, v: v, n: l.length, buyers: buyers.size, sellers: sellers.size, states: states.size, avg: v/l.length, p50: med(l), share: tot ? v/tot : 0 });
+    });
+    rows.sort(function(a,b){ return b.v - a.v; });
+    return '<div class="card"><h3>' + label + ' <span class="mu">(' + rows.length + ')</span></h3>' +
+      T(['Name','Revenue','Share','Orders','Buyers','Sellers','States','Avg order ₹','Median unit ₹'],
+        rows.slice(0, 50).map(function(x){
+          return [
+            '<b>' + esc(String(x.k).slice(0, 50)) + '</b>',
+            fm(x.v), pc(x.share), x.n, x.buyers, x.sellers, x.states, L(x.avg), r2(x.p50)
+          ];
+        })) + '</div>';
+  }
+
+  var html = bar + kpis;
+
+  if (mxActiveCount()){
+    var parts = [];
+    Object.keys(MX).forEach(function(k){
+      if (MX[k]){
+        var nm = MX[k];
+        if (k === 'seller' || k === 'buyer'){
+          var rec = null;
+          for (var i = 0; i < F.length; i++){
+            if (k === 'seller' && sk(F[i]) === MX[k]){ rec = F[i].seller; break; }
+            if (k === 'buyer' && (F[i].bg || F[i].bd) === MX[k]){ rec = F[i].bd || F[i].bg; break; }
+          }
+          nm = (rec || MX[k]).slice(0, 50);
+        }
+        parts.push('<b>' + k + ':</b> ' + esc(String(nm).slice(0,60)));
+      }
+    });
+    html += '<div class="card"><div class="mu">Active filters → ' + parts.join(' · ') + '</div></div>';
+  }
+
+  html += '<div class="grid">';
+  html += breakdown('state', function(r){ return r.bs !== 'Unknown' ? r.bs : null; }, '🗺️ States in this slice');
+  html += breakdown('buyer', function(r){ return r.bg || r.bd; }, '👥 Top buyers in this slice');
+  html += breakdown('seller', function(r){ return sk(r); }, '🥊 Top sellers (competitors)');
+  html += breakdown('cat', function(r){ return r.cat; }, '🏷️ Label types');
+  html += breakdown('size', function(r){ return r.size; }, '📐 Hot sizes');
+  html += breakdown('brand', function(r){ return r.brand; }, '🏭 Brands');
+  html += breakdown('prod', function(r){ return r.prod; }, '📦 Top products');
+  html += breakdown('designation', function(r){ return r.bd; }, '👔 Buyer designations');
+  html += '</div>';
+
+  var mo = new Map();
+  R.forEach(function(r){ var k = r.date.slice(0,7); mo.set(k, (mo.get(k)||0) + r.total); });
+
+  html += '<div class="card"><h3>📅 Monthly trend for this slice</h3>';
+  html += '<div class="ch"><canvas id="mxc1"></canvas></div></div>';
+
+  var srcCounts = { Bid: 0, Direct: 0, Unknown: 0 };
+  R.forEach(function(r){ srcCounts[r.src] = (srcCounts[r.src]||0) + r.total; });
+  html += '<div class="card"><h3>🔨 Bid vs Direct</h3>';
+  html += T(['Source','Revenue','Orders'],
+    Object.keys(srcCounts).map(function(k){
+      var cnt = R.filter(function(r){ return r.src === k; }).length;
+      return [k === 'Bid' ? '🔨 Bid-won' : k === 'Direct' ? '📦 Direct order' : '❓ Unknown', fm(srcCounts[k]), cnt];
+    }));
+  html += '</div>';
+
+  var sample = R.slice().sort(function(a,b){ return b.total - a.total; }).slice(0, 100);
+  html += '<div class="card"><h3>📋 Sample of this slice (top 100 by value)</h3>';
+  html += T(['Date','Buyer','State','Seller','Type','Size','Brand','Product','Qty','Unit ₹','Total ₹'],
+    sample.map(function(r){
+      return [r.date, esc((r.bd || r.bg).slice(0, 30)), esc(r.bs), esc(r.seller.slice(0, 30)), esc(r.cat), esc(r.size), esc(r.brand), esc(r.prod.slice(0, 50)), L(r.qty), r.unit, L(r.total)];
+    }));
+  html += '</div>';
+
+  return html;
+}
+
+function dAnalyst(){
+  var R = mxRows(F);
+  var mo = new Map();
+  R.forEach(function(r){ var k = r.date.slice(0,7); mo.set(k, (mo.get(k)||0) + r.total); });
+  var ks = Array.from(mo.keys()).sort();
+  mk('mxc1', {
+    type: 'line',
+    data: { labels: ks, datasets: [{ data: ks.map(function(k){ return mo.get(k); }), borderColor: '#1a4d8f', backgroundColor: '#1a4d8f33', fill: true, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+}
+
+function mxSet(dim, val){
+  MX[dim] = val || '';
+  show();
+}
+
+function mxReset(){
+  Object.keys(MX).forEach(function(k){ MX[k] = ''; });
+  show();
+}
+
+function mxExportCSV(){
+  var R = mxRows(F);
+  var rows = [['Date','Buyer','GSTIN','State','Seller','SellerGSTIN','Category','Size','Brand','Product','Qty','UnitPrice','Total','Source']];
+  R.forEach(function(r){
+    rows.push([r.date, r.bd, r.bg, r.bs, r.seller, r.sg, r.cat, r.size, r.brand, r.prod, r.qty, r.unit, r.total, r.src]);
+  });
+  function q(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  dl(rows.map(function(r){ return r.map(q).join(','); }).join('\n'), 'gem_slice_' + new Date().toISOString().slice(0,10) + '.csv', 'text/csv');
+}
+
 function vGap(){
   if (!ME){
     return '<div class="card"><h3>🎯 Gap analysis needs a Seller selected</h3><div class="mu">Choose a specific seller from the top dropdown to see which label types, sizes, and buyers they\'re missing.</div><div class="mu" style="margin-top:10px">Currently viewing: <b>All sellers (market view)</b>.</div></div>';
@@ -904,8 +1124,36 @@ function vPlay(){
   return html;
 }
 
-var TABS = { cmd: 'Command centre', delta: '🔥 Deltas', buy: 'Whom to approach', price: 'Price lab', prod: 'Products', geo: 'States', comp: 'Competitors', gap: '🎯 Gaps', qty: 'Qty & timing', play: 'Playbook', rec: 'Records', rpt: '📈 Report' };
-var V = { cmd: [vCmd, dCmd], delta: [vDelta], buy: [vBuy], price: [vPrice, dPrice], prod: [vProd], geo: [vGeo], comp: [vComp], gap: [vGap], qty: [vQty], play: [vPlay], rec: [vRec], rpt: [vReport] };
+var TABS = {
+  cmd: 'Command centre',
+  delta: '🔥 Deltas',
+  buy: 'Whom to approach',
+  price: 'Price lab',
+  prod: 'Products',
+  geo: 'States',
+  comp: 'Competitors',
+  mx: '🔬 Master Analyst',
+  gap: '🎯 Gaps',
+  qty: 'Qty & timing',
+  play: 'Playbook',
+  rec: 'Records',
+  rpt: '📈 Report'
+};
+var V = {
+  cmd: [vCmd, dCmd],
+  delta: [vDelta],
+  buy: [vBuy],
+  price: [vPrice, dPrice],
+  prod: [vProd],
+  geo: [vGeo],
+  comp: [vComp],
+  mx: [vAnalyst, dAnalyst],
+  gap: [vGap],
+  qty: [vQty],
+  play: [vPlay],
+  rec: [vRec],
+  rpt: [vReport]
+};
 
 function mk(id, cfg){
   var el = $(id);
@@ -916,17 +1164,14 @@ function mk(id, cfg){
 }
 
 function show(){
-  // Destroy all existing charts before re-rendering to prevent stale canvases
   Object.keys(CH).forEach(function(id){
     if (CH[id]){ try { CH[id].destroy(); } catch(e){} CH[id] = null; }
   });
-
   var html = '';
   Object.keys(TABS).forEach(function(k){
     html += '<button class="tab' + (k === TAB ? ' on' : '') + '" data-t="' + k + '">' + TABS[k] + '</button>';
   });
   $('tabs').innerHTML = html;
-
   $('view').innerHTML = F.length ? V[TAB][0]() : '<div class="card mu">No records match the filters.</div>';
   if (F.length && V[TAB][1]) V[TAB][1]();
 }
@@ -934,9 +1179,7 @@ function show(){
 function apply(){
   var f = $('from').value, t = $('to').value, s = $('state').value, c = $('cat').value;
   F = ALL.filter(function(r){
-    // If From is set, row date must be >= From
     if (f && r.date < f) return false;
-    // If To is set, row date must be <= To (inclusive — end of day already covers same-day rows)
     if (t && r.date > t) return false;
     if (s && r.bs !== s) return false;
     if (c && r.cat !== c) return false;
@@ -948,33 +1191,26 @@ function apply(){
 function init(){
   $('app').hidden = !ALL.length;
   if (!ALL.length) return;
-
   var cnt = new Map();
   ALL.forEach(function(r){ var k = sk(r); cnt.set(k, (cnt.get(k) || 0) + 1); });
   var all = Array.from(cnt.entries()).sort(function(a,b){ return b[1] - a[1]; });
-
   function nameOf(k){
     for (var i = 0; i < ALL.length; i++) if (sk(ALL[i]) === k) return ALL[i].seller;
     return k;
   }
-
   var saved = ls.g('gem_me') || '';
   ME = saved && cnt.has(saved) ? saved : '';
-
   var meHtml = '<option value=""' + (ME ? '' : ' selected') + '>All sellers (market view)</option>';
   all.forEach(function(p){
     meHtml += '<option value="' + esc(p[0]) + '"' + (p[0] === ME ? ' selected' : '') + '>' + esc(nameOf(p[0]).slice(0, 50)) + ' (' + p[1] + ')</option>';
   });
   $('me').innerHTML = meHtml;
-
   var stateSet = new Set();
   ALL.forEach(function(r){ if (r.bs && r.bs !== 'Unknown') stateSet.add(r.bs); });
   $('state').innerHTML = '<option value="">All</option>' + Array.from(stateSet).sort().map(function(s){ return '<option>' + esc(s) + '</option>'; }).join('');
-
   var catSet = new Set();
   ALL.forEach(function(r){ catSet.add(r.cat); });
   $('cat').innerHTML = '<option value="">All</option>' + Array.from(catSet).sort().map(function(s){ return '<option>' + esc(s) + '</option>'; }).join('');
-
   var dates = ALL.map(function(r){ return r.date; }).filter(Boolean).sort();
   $('from').value = dates[0];
   $('to').value = dates[dates.length - 1];
@@ -1018,7 +1254,7 @@ function exportXLSX(){
   var deltasRows = dl2(D.buyer, 'Buyer').concat(dl2(D.seller, 'Seller')).concat(dl2(D.state, 'State')).concat(dl2(D.size, 'Size')).concat(dl2(D.cat, 'Category'));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(deltasRows), 'Deltas');
   var recs = F.map(function(r){
-    return { Date: r.date, Buyer: r.bd, GSTIN: r.bg, State: r.bs, Phone: r.bp, Seller: r.seller, SellerGSTIN: r.sg, Category: r.cat, Size: r.size, Product: r.prod, Qty: r.qty, UnitPrice: r.unit, Total: r.total, Source: r.src };
+    return { Date: r.date, Buyer: r.bd, GSTIN: r.bg, State: r.bs, Phone: r.bp, Seller: r.seller, SellerGSTIN: r.sg, Category: r.cat, Size: r.size, Brand: r.brand, Product: r.prod, Qty: r.qty, UnitPrice: r.unit, Total: r.total, Source: r.src };
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(recs), 'Records');
   XLSX.writeFile(wb, 'gem_report_' + new Date().toISOString().slice(0, 10) + '.xlsx');
@@ -1104,27 +1340,22 @@ function handle(f){
   console.log('✅ Upload wiring ready.');
 })();
 
-/* ============ EVENT LISTENERS ============ */
-// Tabs
 $('tabs').addEventListener('click', function(e){
   var t = e.target.dataset && e.target.dataset.t;
   if (t){ TAB = t; show(); }
 });
 
-// Seller dropdown → re-render (chart must redraw for Personalization views too)
 $('me').addEventListener('change', function(e){
   ME = e.target.value;
   ls.s('gem_me', ME);
-  show();   // <- was only show(); now apply() not needed since filters unchanged, but we call show to redraw with ME
+  show();
 });
 
-// From / To / State / Type → re-filter and re-render
 ['from','to','state','cat'].forEach(function(i){
   $(i).addEventListener('change', apply);
   $(i).addEventListener('input', apply);
 });
 
-// Buttons
 $('exp').addEventListener('click', function(){
   if (ALL.length) dl(JSON.stringify(ALL), 'gem_master_' + new Date().toISOString().slice(0, 10) + '.json', 'application/json');
 });
