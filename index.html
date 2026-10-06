@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeM Consultant Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       margin:0;padding:20px;background:#f5f7fa;color:#1a2332}
+  h1{margin:0 0 8px;font-size:22px;color:#1a4d8f}
+  h2{margin:24px 0 12px;font-size:18px;color:#1a4d8f;
+     border-bottom:2px solid #e6ecf3;padding-bottom:6px}
+  h3{margin:0 0 12px;font-size:15px}
+  .sub{color:#667;font-size:13px;margin-bottom:16px}
+  .card{background:#fff;border-radius:10px;padding:16px;
+        box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+        gap:14px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid-2{grid-template-columns:1fr}}
+  #drop{border:2px dashed #1a4d8f;padding:32px;text-align:center;
+        border-radius:10px;background:#fff;cursor:pointer;
+        transition:background .2s;margin-bottom:14px}
+  #drop:hover,#drop.over{background:#eaf2fb}
+  #drop small{color:#667;display:block;margin-top:8px}
+  .kpi{display:inline-block;margin:6px 20px 6px 0}
+  .kpi b{display:block;font-size:22px;color:#1a4d8f}
+  .kpi span{font-size:12px;color:#667}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border-bottom:1px solid #eee;padding:7px 8px;text-align:left;
+        vertical-align:top}
+  th{background:#f0f4f9;font-weight:600;color:#334;position:sticky;top:0;z-index:1}
+  tr:hover td{background:#fafbfd}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .btn{background:#1a4d8f;color:#fff;border:0;padding:8px 14px;
+       border-radius:6px;cursor:pointer;font-size:13px}
+  .btn:hover{background:#143a6b}
+  .btn.alt{background:#2e7d32}
+  .btn.alt:hover{background:#245c28}
+  .btn.danger{background:#b3261e}
+  .btn.danger:hover{background:#8c1d18}
+  .chart-wrap{position:relative;height:300px}
+  .chart-sm{position:relative;height:220px}
+  #status{font-size:13px;color:#2e7d32;margin-bottom:12px;padding:8px 12px;
+          background:#eef8ee;border-radius:6px;display:none}
+  #status.err{color:#b3261e;background:#fdecea;display:block}
+  .scroll{max-height:560px;overflow:auto}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;
+         font-size:11px;background:#eaf2fb;color:#1a4d8f}
+  .badge.red{background:#fdecea;color:#b3261e}
+  .badge.amber{background:#fff4e5;color:#a06000}
+  .badge.green{background:#e8f5e9;color:#2e7d32}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;
+        font-size:11px;font-weight:600}
+  .pill.high{background:#fdecea;color:#b3261e}
+  .pill.med{background:#fff4e5;color:#a06000}
+  .pill.low{background:#e8f5e9;color:#2e7d32}
+  .heat td{text-align:center;font-size:11px;padding:4px 2px}
+  .heat .lbl{text-align:left;font-size:12px;font-weight:500}
+  .heat .h0{background:#fff}
+  .heat .h1{background:#eaf2fb}
+  .heat .h2{background:#c5daf0}
+  .heat .h3{background:#8fb4d9;color:#fff}
+  .heat .h4{background:#1a4d8f;color:#fff}
+  .price-band{display:flex;height:12px;border-radius:6px;overflow:hidden;
+              margin:4px 0;font-size:10px;color:#fff}
+  .price-band>div{display:flex;align-items:center;justify-content:center}
+  .pb-low{background:#4caf50}
+  .pb-mid{background:#ff9800}
+  .pb-high{background:#f44336}
+  .empty{color:#889;font-size:13px;font-style:italic;padding:12px 0}
+  .tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{padding:6px 14px;border-radius:6px;background:#e6ecf3;
+       cursor:pointer;font-size:13px;border:0}
+  .tab.active{background:#1a4d8f;color:#fff}
+  details summary{cursor:pointer;font-weight:600;color:#1a4d8f;
+                  padding:6px 0;font-size:14px}
+  details[open] summary{margin-bottom:8px}
+  .small{font-size:12px;color:#667}
+</style>
+</head>
+<body>
+
+<h1>🎯 GeM Consultant Dashboard</h1>
+<div class="sub">Upload your GeM Excel → buyer scorecard, competitor intel, price engine, state opportunities, timing radar.</div>
+
+<div id="drop">
+  📂 <strong>Drop your GeM Excel here</strong> or click to select
+  <input type="file" id="file" accept=".xlsx,.xls" style="display:none">
+  <small>Auto-detects the data sheet · handles en-dash headers · append-only master</small>
+</div>
+
+<div class="actions">
+  <button class="btn" id="exportBtn">⬇️ Export Master (JSON)</button>
+  <button class="btn alt" id="printBtn">🖨️ Print Report</button>
+  <button class="btn danger" id="resetBtn">🗑️ Reset Master</button>
+</div>
+
+<div id="status"></div>
+<div id="dashboard" style="display:none">
+
+<!-- ============ 1. KPI STRIP ============ -->
+<div class="card" id="kpis"></div>
+
+<!-- ============ 2. EXECUTIVE SUMMARY ============ -->
+<div class="card">
+  <h3>📌 Consultant's Executive Summary</h3>
+  <div id="summary" class="small"></div>
+</div>
+
+<!-- ============ 3. TARGET BUYER SCORECARD ============ -->
+<h2>🎯 Target Buyer Scorecard</h2>
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" data-buyer="all">All buyers</button>
+    <button class="tab" data-buyer="priority">Priority (score ≥70)</button>
+    <button class="tab" data-buyer="dormant">Dormant (180+ days)</button>
+    <button class="tab" data-buyer="overdue">Overdue to reorder</button>
+  </div>
+  <div class="scroll"><div id="buyerScorecard"></div></div>
+</div>
+
+<!-- ============ 4. COMPETITOR INTELLIGENCE ============ -->
+<h2>🥊 Competitor Intelligence</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Top Sellers (competitors)</h3>
+    <div class="scroll" style="max-height:420px"><div id="competitors"></div></div>
+  </div>
+  <div class="card">
+    <h3>Seller × State coverage</h3>
+    <div class="scroll" style="max-height:420px"><div id="compStates"></div></div>
+  </div>
+</div>
+
+<!-- ============ 5. PRICE RECOMMENDATION ENGINE ============ -->
+<h2>💰 Price Recommendation Engine</h2>
+<div class="card">
+  <p class="small">For each SKU: market low / median / high, your suggested bid. Bid just under median to win; go lower only for bulk.</p>
+  <div class="scroll"><div id="priceEngine"></div></div>
+</div>
+
+<!-- ============ 6. PRODUCT PROFITABILITY MATRIX ============ -->
+<h2>📦 Product Profitability Matrix</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Top products by value</h3>
+    <div class="chart-wrap"><canvas id="cProdVal"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Product price band</h3>
+    <div class="scroll" style="max-height:340px"><div id="prodMatrix"></div></div>
+  </div>
+</div>
+
+<!-- ============ 7. STATE OPPORTUNITY MAP ============ -->
+<h2>🗺️ State Opportunity Map</h2>
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" data-state="all">All states</button>
+    <button class="tab" data-state="gap">Untapped (0 wins)</button>
+  </div>
+  <div class="scroll"><div id="stateOpp"></div></div>
+</div>
+
+<!-- ============ 8. PERSONA BREAKDOWN ============ -->
+<h2>👥 Buyer Persona Breakdown</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Orders by designation</h3>
+    <div class="chart-wrap"><canvas id="cPersona"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Avg value by designation</h3>
+    <div class="scroll" style="max-height:340px"><div id="personaTable"></div></div>
+  </div>
+</div>
+
+<!-- ============ 9. WHEN TO APPROACH — CALENDAR HEATMAP ============ -->
+<h2>⏰ When to Approach (buyer × month heatmap)</h2>
+<div class="card">
+  <p class="small">Darker = more orders that month. Shows each buyer's seasonal window so you can time outreach.</p>
+  <div class="scroll"><div id="heatmap"></div></div>
+</div>
+
+<!-- ============ 10. REORDER CLOCK ============ -->
+<h2>🔔 Reorder Clock — Call These Buyers</h2>
+<div class="card">
+  <div id="reorderList"></div>
+</div>
+
+<!-- ============ 11. ORDER SIZE DISTRIBUTION ============ -->
+<h2>📈 Order Size Distribution</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3>Orders by quantity band</h3>
+    <div class="chart-wrap"><canvas id="cSize"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Avg unit price by size band</h3>
+    <div class="scroll" style="max-height:340px"><div id="sizeTable"></div></div>
+  </div>
+</div>
+
+<!-- ============ 12. MONTHLY DEMAND ============ -->
+<h2>📅 Monthly Demand & Budget Cycle</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Orders per month</h3>
+    <div class="chart-wrap"><canvas id="cMonth"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Top buyers by value</h3>
+    <div class="chart-wrap"><canvas id="cBuyer"></canvas></div>
+  </div>
+</div>
+
+<!-- ============ 13. CLEANED RECORDS ============ -->
+<h2>📋 Cleaned Records</h2>
+<div class="card">
+  <div style="margin-bottom:8px">
+    <input id="tableSearch" placeholder="🔍 Search buyer / seller / product / state…"
+           style="padding:8px 12px;border:1px solid #dde;border-radius:6px;
+                  width:100%;font-size:13px">
+  </div>
+  <div class="scroll"><div id="tbl"></div></div>
+</div>
+
+</div><!-- /dashboard -->
+
+<script>
+/* =====================================================================
+   0. CONSTANTS
+   ===================================================================== */
+const MASTER_KEY = 'gem_master_v2';
+
+const EXPECTED_HEADERS = [
+  'Generated Date','Buyer Designation','Buyer Contact No','Buyer GSTIN',
+  'Buyer Address','Seller Company Name','Seller Contact No','Seller GSTIN',
+  'Seller Address','Product Name','Ordered Quantity','Unit Price',
+  'Price (Inclusive of All Duties & Taxes) - INR'
+];
+
+/* =====================================================================
+   1. CLEANING HELPERS
+   ===================================================================== */
+const trimDash = s => String(s ?? '').replace(/[-\s]+$/, '').trim();
+const cleanGSTIN = s => String(s ?? '').replace(/\s*\(R\)\s*$/i,'').trim().toUpperCase();
+const cleanText = s => String(s ?? '').replace(/\s{2,}/g,' ').trim();
+const cleanAddr = s => String(s ?? '')
+  .replace(/\s*,\s*-/g, ', ')
+  .replace(/,{2,}/g, ',')
+  .replace(/,\s*,/g, ',')
+  .replace(/\s{2,}/g, ' ')
+  .trim();
+const num = v => {
+  if (v === null || v === undefined || v === '') return 0;
+  const n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+  return isNaN(n) ? 0 : n;
+};
+
+function parseState(addr){
+  const m = String(addr||'').match(/([A-Z][A-Z &\.]{3,})-\d{6}/);
+  if (m) return m[1].trim();
+  const m2 = String(addr||'').match(/,\s*([A-Z][A-Za-z &\.]+)-\d{6}/);
+  return m2 ? m2[1].trim().toUpperCase() : 'Unknown';
+}
+function parsePincode(addr){
+  const m = String(addr||'').match(/-(\d{6})/);
+  return m ? m[1] : '';
+}
+function parseDate(v){
+  if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+  if (typeof v === 'number'){
+    const d = new Date(Date.UTC(1899,11,30) + v*86400000);
+    return isNaN(d) ? '' : d.toISOString().slice(0,10);
+  }
+  const s = String(v||'').trim();
+  if (!s) return '';
+  const dm = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+  if (dm){
+    const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',
+                  jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+    const mm = months[dm[2].toLowerCase()];
+    const yyyy = dm[3].length === 2 ? '20'+dm[3] : dm[3];
+    if (mm) return `${yyyy}-${mm}-${String(dm[1]).padStart(2,'0')}`;
+  }
+  const d = new Date(s);
+  return isNaN(d) ? s : d.toISOString().slice(0,10);
+}
+
+/* =====================================================================
+   2. HEADER NORMALIZATION
+   ===================================================================== */
+function normalizeKey(k){
+  return String(k)
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u00A0/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function normalizeRow(row){
+  const out = {};
+  for (const k in row) out[normalizeKey(k)] = row[k];
+  return out;
+}
+
+/* =====================================================================
+   3. ROW CLEANER
+   ===================================================================== */
+function cleanRow(r){
+  const qty   = num(r['Ordered Quantity']);
+  const unit  = num(r['Unit Price']);
+  const total = num(r['Price (Inclusive of All Duties & Taxes) - INR']);
+  return {
+    date:        parseDate(r['Generated Date']),
+    buyerDesig:  cleanText(r['Buyer Designation']),
+    buyerPhone:  trimDash(r['Buyer Contact No']),
+    buyerGSTIN:  cleanGSTIN(r['Buyer GSTIN']),
+    buyerAddr:   cleanAddr(r['Buyer Address']),
+    buyerState:  parseState(r['Buyer Address']),
+    buyerPin:    parsePincode(r['Buyer Address']),
+    seller:      cleanText(r['Seller Company Name']),
+    sellerPhone: trimDash(r['Seller Contact No']),
+    sellerGSTIN: cleanGSTIN(r['Seller GSTIN']),
+    sellerAddr:  cleanAddr(r['Seller Address']),
+    sellerState: parseState(r['Seller Address']),
+    product:     cleanText(r['Product Name']),
+    qty, unitPrice: unit,
+    total: total > 0 ? total : qty * unit
+  };
+}
+const rowKey = r => [r.date, r.buyerGSTIN, r.sellerGSTIN,
+                     r.product, r.qty, r.total].join('|');
+
+/* =====================================================================
+   4. MASTER STORE
+   ===================================================================== */
+function loadMaster(){
+  try { return JSON.parse(localStorage.getItem(MASTER_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveMaster(rows){
+  const existing = loadMaster();
+  const seen = new Set(existing.map(rowKey));
+  let added = 0;
+  for (const r of rows){
+    const k = rowKey(r);
+    if (!seen.has(k)){ existing.push(r); seen.add(k); added++; }
+  }
+  localStorage.setItem(MASTER_KEY, JSON.stringify(existing));
+  return { total: existing.length, added };
+}
+function resetMaster(){
+  if (confirm('Delete ALL master data? Cannot be undone.')){
+    localStorage.removeItem(MASTER_KEY);
+    location.reload();
+  }
+}
+
+/* =====================================================================
+   5. SHEET DETECTION
+   ===================================================================== */
+function findDataSheet(wb){
+  let best = null;
+  for (const name of wb.SheetNames){
+    const ws = wb.Sheets[name];
+    if (!ws) continue;
+    let rows;
+    try { rows = XLSX.utils.sheet_to_json(ws,{defval:'',range:0,header:1}); }
+    catch { continue; }
+    if (!rows.length) continue;
+    let h = 0;
+    while (h < rows.length &&
+           rows[h].filter(c => String(c).trim() !== '').length < 3) h++;
+    if (h >= rows.length) continue;
+    const header = rows[h].map(normalizeKey);
+    const matches = EXPECTED_HEADERS.filter(x => header.includes(x)).length;
+    if (!best || matches > best.matches) best = {name, matches};
+  }
+  return (best && best.matches >= 6) ? best.name : null;
+}
+
+/* =====================================================================
+   6. UTILITIES
+   ===================================================================== */
+function fmtINR(n){
+  if (n >= 1e7) return '₹' + (n/1e7).toFixed(2) + ' Cr';
+  if (n >= 1e5) return '₹' + (n/1e5).toFixed(2) + ' L';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function daysBetween(a, b){
+  return Math.round((new Date(a) - new Date(b)) / 86400000);
+}
+function setStatus(msg, isErr){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = isErr ? 'err' : '';
+  el.style.display = 'block';
+}
+
+/* =====================================================================
+   7. AGGREGATORS
+   ===================================================================== */
+function agg(rows, keyFn, valFn){
+  const m = new Map();
+  for (const r of rows){
+    const k = keyFn(r) || 'Unknown';
+    m.set(k, (m.get(k) || 0) + (valFn(r) || 0));
+  }
+  return [...m.entries()].sort((a,b) => b[1] - a[1]);
+}
+
+/* =====================================================================
+   8. BUYER SCORECARD
+   ===================================================================== */
+function buyerScorecard(rows){
+  const byBuyer = new Map();
+  for (const r of rows){
+    if (!r.buyerGSTIN) continue;
+    if (!byBuyer.has(r.buyerGSTIN)) byBuyer.set(r.buyerGSTIN, []);
+    byBuyer.get(r.buyerGSTIN).push(r);
+  }
+  const today = new Date();
+  const out = [];
+  for (const [gstin, list] of byBuyer){
+    list.sort((a,b) => a.date.localeCompare(b.date));
+    const last = list[list.length-1];
+    const daysSince = daysBetween(today, last.date);
+    const totalValue = list.reduce((s,r) => s + r.total, 0);
+    const avgValue = totalValue / list.length;
+    const freq = list.length;
+    const recency  = daysSince < 30 ? 30 : daysSince < 90 ? 20 : daysSince < 180 ? 10 : 3;
+    const freqScore = Math.min(freq * 4, 25);
+    const valScore   = Math.min((avgValue / 100000) * 25, 25);
+    const uniqP      = new Set(list.map(r => r.product)).size;
+    const prodScore  = Math.min(uniqP * 2, 10);
+    const recent180  = list.filter(r => daysBetween(today, r.date) <= 180).length;
+    const trendScore = Math.min(recent180 * 3, 10);
+    const score = Math.round(recency + freqScore + valScore + prodScore + trendScore);
+    const status = daysSince < 60 ? 'active' : daysSince < 180 ? 'warm' : 'dormant';
+
+    // Average reorder cycle
+    let cycle = 0;
+    if (list.length >= 2){
+      const gaps = [];
+      for (let i = 1; i < list.length; i++){
+        const g = daysBetween(list[i].date, list[i-1].date);
+        if (g > 0) gaps.push(g);
+      }
+      if (gaps.length) cycle = Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
+    }
+    const nextDue = cycle ? new Date(new Date(last.date).getTime() + cycle*86400000) : null;
+    const daysTo = nextDue ? daysBetween(nextDue, today) : null;
+
+    out.push({
+      gstin, buyer: last.buyerDesig || gstin, state: last.buyerState,
+      phone: last.buyerPhone, orders: freq, totalValue, avgValue,
+      daysSince, lastOrder: last.date, cycle, nextDue,
+      nextDueStr: nextDue ? nextDue.toISOString().slice(0,10) : '',
+      daysTo, score, status, product: last.product,
+      productCount: uniqP
+    });
+  }
+  return out.sort((a,b) => b.score - a.score);
+}
+
+/* =====================================================================
+   9. COMPETITOR INTEL
+   ===================================================================== */
+function competitorStats(rows, myGSTIN){
+  const bySeller = new Map();
+  for (const r of rows){
+    const s = r.seller || 'Unknown';
+    if (!bySeller.has(s)) bySeller.set(s, {
+      orders: 0, total: 0, buyers: new Set(), states: new Set(),
+      products: new Set(), prices: [], myWins: 0, myBuyerOverlap: new Set()
+    });
+    const o = bySeller.get(s);
+    o.orders++;
+    o.total += r.total;
+    if (r.buyerGSTIN) o.buyers.add(r.buyerGSTIN);
+    if (r.buyerState && r.buyerState !== 'Unknown') o.states.add(r.buyerState);
+    if (r.product) o.products.add(r.product);
+    if (r.unitPrice > 0) o.prices.push(r.unitPrice);
+    if (myGSTIN && r.sellerGSTIN === myGSTIN) o.myWins++;
+  }
+  return [...bySeller.entries()].map(([seller, o]) => {
+    o.prices.sort((a,b) => a-b);
+    const median = o.prices.length ? o.prices[Math.floor(o.prices.length/2)] : 0;
+    return {
+      seller,
+      orders: o.orders, total: o.total,
+      uniqueBuyers: o.buyers.size,
+      uniqueStates: o.states.size,
+      uniqueProducts: o.products.size,
+      medianPrice: median,
+      topState: [...o.states][0] || '—',
+      isMe: myGSTIN && o.myWins > 0
+    };
+  }).sort((a,b) => b.total - a.total);
+}
+
+/* =====================================================================
+   10. PRICE RECOMMENDATION
+   ===================================================================== */
+function priceRecommendations(rows){
+  const byProduct = new Map();
+  for (const r of rows){
+    if (!r.product || r.unitPrice <= 0) continue;
+    if (!byProduct.has(r.product)) byProduct.set(r.product, []);
+    byProduct.get(r.product).push(r);
+  }
+  const out = [];
+  for (const [product, list] of byProduct){
+    if (list.length < 3) continue;
+    const prices = list.map(r => r.unitPrice).sort((a,b) => a-b);
+    const p = q => prices[Math.floor(prices.length * q)];
+    const low = p(0.10), median = p(0.50), high = p(0.90);
+    const avgQty = list.reduce((s,r) => s + r.qty, 0) / list.length;
+    const totalVal = list.reduce((s,r) => s + r.total, 0);
+    out.push({
+      product, orders: list.length,
+      low, median, high, avgQty: Math.round(avgQty), totalVal,
+      recBid: Math.round(median * 0.97),
+      recBulkBid: Math.round(median * 0.88)
+    });
+  }
+  return out.sort((a,b) => b.totalVal - a.totalVal).slice(0, 25);
+}
+
+/* =====================================================================
+   11. STATE OPPORTUNITY
+   ===================================================================== */
+function stateOpportunity(rows, myGSTIN){
+  const byState = new Map();
+  for (const r of rows){
+    const s = r.buyerState;
+    if (!s || s === 'Unknown') continue;
+    if (!byState.has(s)) byState.set(s, {
+      total: 0, orders: 0, myWins: 0, buyers: new Set(), sellers: new Set()
+    });
+    const o = byState.get(s);
+    o.total += r.total;
+    o.orders++;
+    if (r.buyerGSTIN) o.buyers.add(r.buyerGSTIN);
+    if (r.seller) o.sellers.add(r.seller);
+    if (myGSTIN && r.sellerGSTIN === myGSTIN) o.myWins++;
+  }
+  return [...byState.entries()].map(([state, o]) => ({
+    state,
+    marketValue: o.total,
+    marketOrders: o.orders,
+    myOrders: o.myWins,
+    uniqueBuyers: o.buyers.size,
+    uniqueSellers: o.sellers.size,
+    myShare: o.orders ? (o.myWins / o.orders * 100) : 0,
+    opportunity: o.myWins === 0 ? 'HIGH'
+               : o.myWins < o.orders * 0.1 ? 'MEDIUM' : 'LOW'
+  })).sort((a,b) => b.marketValue - a.marketValue);
+}
+
+/* =====================================================================
+   12. PERSONA BREAKDOWN
+   ===================================================================== */
+function personaBreakdown(rows){
+  const byDesig = new Map();
+  for (const r of rows){
+    const d = normalizeDesignation(r.buyerDesig);
+    if (!byDesig.has(d)) byDesig.set(d, {
+      orders: 0, total: 0, buyers: new Set(), products: new Set()
+    });
+    const o = byDesig.get(d);
+    o.orders++;
+    o.total += r.total;
+    if (r.buyerGSTIN) o.buyers.add(r.buyerGSTIN);
+    if (r.product) o.products.add(r.product);
+  }
+  return [...byDesig.entries()].map(([designation, o]) => ({
+    designation,
+    orders: o.orders,
+    total: o.total,
+    avgValue: o.orders ? o.total / o.orders : 0,
+    uniqueBuyers: o.buyers.size,
+    avgOrdersPerBuyer: o.buyers.size ? o.orders / o.buyers.size : 0
+  })).sort((a,b) => b.orders - a.orders).slice(0, 15);
+}
+
+function normalizeDesignation(d){
+  if (!d) return 'Unknown';
+  const s = String(d).toLowerCase();
+  if (s.includes('supdt') || s.includes('superintendent') || s.includes('spos'))
+    return 'Superintendent / SPOs';
+  if (s.includes('professor') || s.includes('principal')) return 'Professor / Principal';
+  if (s.includes('assistant procurement') || s.includes('procurement'))
+    return 'Procurement Officer';
+  if (s.includes('asp')) return 'ASP / ASPOs';
+  if (s.includes('medical officer') || s.includes('doctor')) return 'Medical Officer';
+  if (s.includes('storekeeper') || s.includes('store keeper')) return 'Storekeeper';
+  if (s.includes('clerk') || s.includes('ldc') || s.includes('udc'))
+    return 'Clerk / LDC / UDC';
+  if (s.includes('account')) return 'Accountant';
+  if (s.includes('scientist')) return 'Scientist';
+  if (s.includes('teacher') || s.includes('lecturer')) return 'Teacher / Lecturer';
+  if (s.includes('engineer')) return 'Engineer';
+  if (s.includes('officer')) return 'Other Officer';
+  return String(d).slice(0, 30);
+}
+
+/* =====================================================================
+   13. ORDER SIZE DISTRIBUTION
+   ===================================================================== */
+function orderSizeBands(rows){
+  const bands = [
+    {name: '1–100',      min: 1, max: 100},
+    {name: '101–500',    min: 101, max: 500},
+    {name: '501–2000',   min: 501, max: 2000},
+    {name: '2001–10000', min: 2001, max: 10000},
+    {name: '10001+',     min: 10001, max: Infinity}
+  ];
+  return bands.map(b => {
+    const items = rows.filter(r => r.qty >= b.min && r.qty <= b.max);
+    const orders = items.length;
+    const total = items.reduce((s,r) => s + r.total, 0);
+    const avgUnit = items.length
+      ? items.reduce((s,r) => s + r.unitPrice, 0) / items.length : 0;
+    return { band: b.name, orders, total,
+             avgValue: orders ? total/orders : 0, avgUnit };
+  });
+}
+
+/* =====================================================================
+   14. REORDER CLOCK
+   ===================================================================== */
+function reorderList(rows){
+  const score = buyerScorecard(rows).filter(x => x.cycle > 0 && x.nextDue);
+  const today = new Date();
+  const out = score.map(x => ({
+    ...x,
+    daysToDue: daysBetween(x.nextDue, today),
+    overdue: daysBetween(x.nextDue, today) < 0
+  })).sort((a,b) => a.daysToDue - b.daysToDue);
+  return out.filter(x => x.daysToDue <= 30).slice(0, 20);
+}
+
+/* =====================================================================
+   15. CHART HELPERS
+   ===================================================================== */
+const charts = {};
+function drawBar(id, label, data, color = '#1a4d8f', max = 10){
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (charts[id]) charts[id].destroy();
+  const s = data.slice(0, max);
+  charts[id] = new Chart(el, {
+    type: 'bar',
+    data: {
+      labels: s.map(d => {
+        const t = String(d[0]);
+        return t.length > 32 ? t.slice(0,32) + '…' : t;
+      }),
+      datasets: [{ label, data: s.map(d => d[1]),
+                   backgroundColor: color, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c =>
+          ` ${c.parsed.x.toLocaleString('en-IN')}` } } },
+      scales: { x: { ticks: { callback: v =>
+        v >= 1e7 ? (v/1e7).toFixed(1)+'Cr'
+        : v >= 1e5 ? (v/1e5).toFixed(1)+'L'
+        : v >= 1e3 ? (v/1e3).toFixed(0)+'k' : v } } }
+    }
+  });
+}
+function drawLine(id, label, labels, data, color = '#1a4d8f'){
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(el, {
+    type: 'line',
+    data: { labels, datasets: [{
+      label, data, borderColor: color,
+      backgroundColor: color + '22', fill: true,
+      tension: 0.3, pointRadius: 4
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+/* =====================================================================
+   16. RENDERERS
+   ===================================================================== */
+
+// 1. KPI strip
+function renderKPIs(rows){
+  const totalVal = rows.reduce((s,r) => s + r.total, 0);
+  const totalQty = rows.reduce((s,r) => s + r.qty, 0);
+  const buyers   = new Set(rows.map(r => r.buyerGSTIN).filter(Boolean)).size;
+  const sellers  = new Set(rows.map(r => r.seller).filter(Boolean)).size;
+  const states   = new Set(rows.map(r => r.buyerState)
+                            .filter(s => s && s !== 'Unknown')).size;
+  const products = new Set(rows.map(r => r.product).filter(Boolean)).size;
+  const dates    = rows.map(r => r.date).filter(Boolean).sort();
+  const range    = dates.length ? `${dates[0]} → ${dates[dates.length-1]}` : '—';
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><b>${rows.length.toLocaleString('en-IN')}</b><span>Records</span></div>
+    <div class="kpi"><b>${fmtINR(totalVal)}</b><span>Total Value</span></div>
+    <div class="kpi"><b>${totalQty.toLocaleString('en-IN')}</b><span>Total Qty</span></div>
+    <div class="kpi"><b>${buyers}</b><span>Buyers</span></div>
+    <div class="kpi"><b>${sellers}</b><span>Sellers</span></div>
+    <div class="kpi"><b>${products}</b><span>Products</span></div>
+    <div class="kpi"><b>${states}</b><span>States</span></div>
+    <div class="kpi"><b>${range}</b><span>Date Range</span></div>
+  `;
+}
+
+// 2. Executive summary
+function renderSummary(rows, myGSTIN){
+  const cards = buyerScorecard(rows);
+  const priority = cards.filter(c => c.score >= 70 && c.status !== 'dormant').length;
+  const overdue  = reorderList(rows).filter(x => x.overdue).length;
+  const states   = stateOpportunity(rows, myGSTIN);
+  const gaps     = states.filter(s => s.opportunity === 'HIGH').slice(0, 3);
+  const topProd  = priceRecommendations(rows)[0];
+  const totalVal = rows.reduce((s,r) => s + r.total, 0);
+
+  const html = `
+    <ul style="margin:6px 0;padding-left:20px">
+      <li><b>${priority}</b> priority buyers (score ≥70, active) — call these first.</li>
+      <li><b>${overdue}</b> buyers are <b>overdue</b> for reorder — immediate outreach.</li>
+      <li>Top opportunity states with <b>0% share</b>:
+          ${gaps.map(g => `<span class="badge red">${escapeHtml(g.state)} · ${fmtINR(g.marketValue)}</span>`).join(' ')}
+          ${gaps.length ? '' : '<em>none</em>'}</li>
+      <li>Total addressable value in dataset: <b>${fmtINR(totalVal)}</b>.</li>
+      ${topProd ? `<li>Highest-volume SKU: <b>${escapeHtml(topProd.product.slice(0,60))}</b> —
+          bid around <b>₹${topProd.recBid}</b> (median ₹${topProd.median}).</li>` : ''}
+    </ul>
+  `;
+  document.getElementById('summary').innerHTML = html;
+}
+
+// 3. Buyer scorecard
+let buyerFilter = 'all';
+function renderBuyerScorecard(rows){
+  const all = buyerScorecard(rows);
+  let list = all;
+  if (buyerFilter === 'priority') list = all.filter(b => b.score >= 70);
+  if (buyerFilter === 'dormant')  list = all.filter(b => b.daysSince >= 180);
+  if (buyerFilter === 'overdue')  list = reorderList(rows).filter(x => x.overdue);
+  list = list.slice(0, 60);
+  if (!list.length){
+    document.getElementById('buyerScorecard').innerHTML =
+      '<div class="empty">No buyers match this filter.</div>';
+    return;
+  }
+  const html = `<table>
+    <thead><tr>
+      <th>Score</th><th>Buyer</th><th>State</th><th>Orders</th>
+      <th>Total ₹</th><th>Avg ₹</th><th>Cycle</th>
+      <th>Last Order</th><th>Days</th><th>Status</th><th>Contact</th>
+    </tr></thead>
+    <tbody>${list.map(b => `<tr>
+      <td><strong>${b.score}</strong></td>
+      <td>${escapeHtml(b.buyer)}</td>
+      <td>${escapeHtml(b.state)}</td>
+      <td>${b.orders}</td>
+      <td>${b.totalValue.toLocaleString('en-IN')}</td>
+      <td>${Math.round(b.avgValue).toLocaleString('en-IN')}</td>
+      <td>${b.cycle ? b.cycle + 'd' : '—'}</td>
+      <td>${b.lastOrder}</td>
+      <td>${b.daysSince}</td>
+      <td>${b.status === 'active' ? '🟢 Active'
+           : b.status === 'warm' ? '🟡 Warm' : '🔴 Dormant'}</td>
+      <td>${escapeHtml(b.phone || '—')}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('buyerScorecard').innerHTML = html;
+}
+
+// 4. Competitor intel
+function renderCompetitors(rows, myGSTIN){
+  const list = competitorStats(rows, myGSTIN).slice(0, 30);
+  document.getElementById('competitors').innerHTML = `<table>
+    <thead><tr>
+      <th>Seller</th><th>Orders</th><th>Total ₹</th>
+      <th>Buyers</th><th>States</th><th>Median ₹</th>
+    </tr></thead>
+    <tbody>${list.map(s => `<tr${s.isMe ? ' style="background:#eef8ee"' : ''}>
+      <td>${s.isMe ? '⭐ ' : ''}${escapeHtml(s.seller)}</td>
+      <td>${s.orders}</td>
+      <td>${s.total.toLocaleString('en-IN')}</td>
+      <td>${s.uniqueBuyers}</td>
+      <td>${s.uniqueStates}</td>
+      <td>${Math.round(s.medianPrice).toLocaleString('en-IN')}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function renderCompStates(rows){
+  // Seller × State matrix (top 15 sellers, top 10 states)
+  const sellerTotals = new Map();
+  const stateTotals = new Map();
+  const cell = new Map();
+  for (const r of rows){
+    if (!r.seller || !r.buyerState || r.buyerState === 'Unknown') continue;
+    sellerTotals.set(r.seller, (sellerTotals.get(r.seller)||0) + r.total);
+    stateTotals.set(r.buyerState, (stateTotals.get(r.buyerState)||0) + r.total);
+    const k = r.seller + '||' + r.buyerState;
+    cell.set(k, (cell.get(k)||0) + r.total);
+  }
+  const topSellers = [...sellerTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const topStates  = [...stateTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if (!topSellers.length){
+    document.getElementById('compStates').innerHTML =
+      '<div class="empty">Not enough seller/state data.</div>';
+    return;
+  }
+  const max = Math.max(...[...cell.values()]);
+  const html = `<table class="heat">
+    <thead><tr><th class="lbl">Seller \\ State</th>
+      ${topStates.map(s => `<th>${escapeHtml(s[0].slice(0,8))}</th>`).join('')}
+    </tr></thead>
+    <tbody>${topSellers.map(([seller]) => `<tr>
+      <td class="lbl">${escapeHtml(seller.slice(0,26))}</td>
+      ${topStates.map(([state]) => {
+        const v = cell.get(seller+'||'+state) || 0;
+        const level = v === 0 ? 0 : Math.ceil((v/max)*4);
+        return `<td class="h${level}" title="${state}: ₹${v.toLocaleString('en-IN')}">${
+          v ? (v >= 1e5 ? (v/1e5).toFixed(1)+'L' : (v/1e3).toFixed(0)+'k') : ''}</td>`;
+      }).join('')}
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('compStates').innerHTML = html;
+}
+
+// 5. Price engine
+function renderPriceEngine(rows){
+  const list = priceRecommendations(rows);
+  if (!list.length){
+    document.getElementById('priceEngine').innerHTML =
+      '<div class="empty">Not enough price data per product.</div>';
+    return;
+  }
+  const html = `<table>
+    <thead><tr>
+      <th>Product</th><th>Orders</th><th>Avg Qty</th>
+      <th>Market Low</th><th>Median</th><th>Market High</th>
+      <th>Recommended Bid</th><th>Bulk Bid</th><th>Total ₹</th>
+    </tr></thead>
+    <tbody>${list.map(p => `<tr>
+      <td>${escapeHtml(p.product.slice(0,60))}</td>
+      <td>${p.orders}</td>
+      <td>${p.avgQty.toLocaleString('en-IN')}</td>
+      <td>₹${Math.round(p.low)}</td>
+      <td><strong>₹${Math.round(p.median)}</strong></td>
+      <td>₹${Math.round(p.high)}</td>
+      <td style="color:#2e7d32;font-weight:600">₹${p.recBid}</td>
+      <td style="color:#1565c0">₹${p.recBulkBid}</td>
+      <td>${p.totalVal.toLocaleString('en-IN')}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('priceEngine').innerHTML = html;
+}
+
+// 6. Product matrix
+function renderProductMatrix(rows){
+  const list = priceRecommendations(rows);
+  if (!list.length){
+    document.getElementById('prodMatrix').innerHTML =
+      '<div class="empty">Not enough data.</div>';
+    return;
+  }
+  const html = list.map(p => `
+    <div style="padding:8px 0;border-bottom:1px solid #eee">
+      <div style="font-weight:500;font-size:13px">${escapeHtml(p.product.slice(0,70))}</div>
+      <div class="price-band">
+        <div class="pb-low" style="width:33%">₹${Math.round(p.low)}</div>
+        <div class="pb-mid" style="width:34%">₹${Math.round(p.median)}</div>
+        <div class="pb-high" style="width:33%">₹${Math.round(p.high)}</div>
+      </div>
+      <div class="small">${p.orders} orders · avg qty ${p.avgQty.toLocaleString('en-IN')}
+        · total ${fmtINR(p.totalVal)}</div>
+    </div>`).join('');
+  document.getElementById('prodMatrix').innerHTML = html;
+}
+
+// 7. State opportunity
+let stateFilter = 'all';
+function renderStateOpp(rows, myGSTIN){
+  let list = stateOpportunity(rows, myGSTIN);
+  if (stateFilter === 'gap') list = list.filter(s => s.myOrders === 0);
+  if (!list.length){
+    document.getElementById('stateOpp').innerHTML =
+      '<div class="empty">No state data.</div>';
+    return;
+  }
+  const html = `<table>
+    <thead><tr>
+      <th>State</th><th>Market ₹</th><th>Orders</th>
+      <th>Buyers</th><th>Sellers</th><th>Your Wins</th>
+      <th>Your Share</th><th>Opportunity</th>
+    </tr></thead>
+    <tbody>${list.map(s => {
+      const cls = s.opportunity === 'HIGH' ? 'high'
+                : s.opportunity === 'MEDIUM' ? 'med' : 'low';
+      return `<tr>
+        <td>${escapeHtml(s.state)}</td>
+        <td>${s.marketValue.toLocaleString('en-IN')}</td>
+        <td>${s.marketOrders}</td>
+        <td>${s.uniqueBuyers}</td>
+        <td>${s.uniqueSellers}</td>
+        <td>${s.myOrders}</td>
+        <td>${s.myShare.toFixed(1)}%</td>
+        <td><span class="pill ${cls}">${s.opportunity}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  document.getElementById('stateOpp').innerHTML = html;
+}
+
+// 8. Persona
+function renderPersona(rows){
+  const list = personaBreakdown(rows);
+  if (!list.length){
+    document.getElementById('personaTable').innerHTML =
+      '<div class="empty">Not enough data.</div>';
+    return;
+  }
+  document.getElementById('personaTable').innerHTML = `<table>
+    <thead><tr>
+      <th>Designation</th><th>Orders</th><th>Total ₹</th>
+      <th>Avg ₹</th><th>Buyers</th><th>Reorders/Buyer</th>
+    </tr></thead>
+    <tbody>${list.map(p => `<tr>
+      <td>${escapeHtml(p.designation)}</td>
+      <td>${p.orders}</td>
+      <td>${p.total.toLocaleString('en-IN')}</td>
+      <td>${Math.round(p.avgValue).toLocaleString('en-IN')}</td>
+      <td>${p.uniqueBuyers}</td>
+      <td>${p.avgOrdersPerBuyer.toFixed(2)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// 9. Heatmap
+function renderHeatmap(rows){
+  const monthSet = new Set();
+  const buyerSet = new Map();
+  for (const r of rows){
+    if (!r.date || !r.buyerGSTIN) continue;
+    const m = r.date.slice(0,7);
+    monthSet.add(m);
+    if (!buyerSet.has(r.buyerGSTIN)) buyerSet.set(r.buyerGSTIN, new Map());
+    const bm = buyerSet.get(r.buyerGSTIN);
+    bm.set(m, (bm.get(m)||0) + 1);
+  }
+  const months = [...monthSet].sort();
+  if (months.length < 2){
+    document.getElementById('heatmap').innerHTML =
+      '<div class="empty">Need data spanning multiple months.</div>';
+    return;
+  }
+  // Pick top 25 buyers by order count
+  const topBuyers = [...buyerSet.entries()]
+    .map(([gstin, bm]) => [gstin, [...bm.values()].reduce((a,b)=>a+b,0), bm])
+    .sort((a,b) => b[1] - a[1]).slice(0, 25);
+
+  // Max cell for scaling
+  let max = 0;
+  for (const [, , bm] of topBuyers)
+    for (const v of bm.values()) if (v > max) max = v;
+
+  // Buyer name lookup
+  const nameOf = new Map();
+  for (const r of rows) if (r.buyerGSTIN) nameOf.set(r.buyerGSTIN, r.buyerDesig);
+
+  const html = `<table class="heat">
+    <thead><tr><th class="lbl">Buyer</th>
+      ${months.map(m => `<th>${m.slice(5)}/${m.slice(2,4)}</th>`).join('')}
+    </tr></thead>
+    <tbody>${topBuyers.map(([gstin, total, bm]) => `<tr>
+      <td class="lbl" title="${gstin}">${escapeHtml((nameOf.get(gstin)||gstin).slice(0,32))}</td>
+      ${months.map(m => {
+        const v = bm.get(m) || 0;
+        const lvl = v === 0 ? 0 : Math.ceil((v/max)*4);
+        return `<td class="h${lvl}">${v || ''}</td>`;
+      }).join('')}
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('heatmap').innerHTML = html;
+}
+
+// 10. Reorder list
+function renderReorder(rows){
+  const list = reorderList(rows);
+  if (!list.length){
+    document.getElementById('reorderList').innerHTML =
+      '<div class="empty">No buyers with computed cycle in due window (≤30 days).</div>';
+    return;
+  }
+  document.getElementById('reorderList').innerHTML = list.map(x => {
+    const overdue = x.daysToDue < 0;
+    const soon = x.daysToDue >= 0 && x.daysToDue <= 7;
+    const flag = overdue ? '🔴 OVERDUE'
+               : soon ? '🟡 DUE SOON' : '🟢';
+    const color = overdue ? '#b3261e' : soon ? '#a06000' : '#2e7d32';
+    return `<div style="padding:10px 0;border-bottom:1px solid #eee">
+      <div style="color:${color};font-weight:600;font-size:12px">${flag}</div>
+      <div><strong>${escapeHtml(x.buyer)}</strong>
+           <span class="small">· ${escapeHtml(x.state)}</span></div>
+      <div class="small">
+        Last: ${x.lastOrder} · Cycle ≈ ${x.cycle}d ·
+        Next due: ${x.nextDueStr}
+        ${overdue ? `(${Math.abs(x.daysToDue)}d overdue)` : `(in ${x.daysToDue}d)`}
+      </div>
+      ${x.phone ? `<div class="small">📞 ${escapeHtml(x.phone)}</div>` : ''}
+      <div class="small">Last product: ${escapeHtml(x.product.slice(0,70))}</div>
+    </div>`;
+  }).join('');
+}
+
+// 11. Order size
+function renderSizeTable(rows){
+  const bands = orderSizeBands(rows);
+  const total = rows.length || 1;
+  document.getElementById('sizeTable').innerHTML = `<table>
+    <thead><tr>
+      <th>Qty band</th><th>Orders</th><th>%</th>
+      <th>Total ₹</th><th>Avg ₹</th><th>Avg Unit ₹</th>
+    </tr></thead>
+    <tbody>${bands.map(b => `<tr>
+      <td>${b.band}</td>
+      <td>${b.orders}</td>
+      <td>${((b.orders/total)*100).toFixed(1)}%</td>
+      <td>${b.total.toLocaleString('en-IN')}</td>
+      <td>${Math.round(b.avgValue).toLocaleString('en-IN')}</td>
+      <td>₹${Math.round(b.avgUnit)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// 12. Cleaned records table
+let searchTerm = '';
+function renderTable(rows){
+  const q = searchTerm.toLowerCase();
+  const filtered = q ? rows.filter(r =>
+    (r.buyerDesig||'').toLowerCase().includes(q) ||
+    (r.seller||'').toLowerCase().includes(q) ||
+    (r.product||'').toLowerCase().includes(q) ||
+    (r.buyerState||'').toLowerCase().includes(q) ||
+    (r.buyerGSTIN||'').toLowerCase().includes(q)
+  ) : rows;
+  const top = [...filtered].sort((a,b) => b.total - a.total).slice(0, 300);
+  document.getElementById('tbl').innerHTML = `<table>
+    <thead><tr>
+      <th>Date</th><th>Buyer</th><th>State</th><th>Seller</th>
+      <th>Product</th><th>Qty</th><th>Unit ₹</th><th>Total ₹</th>
+    </tr></thead>
+    <tbody>${top.map(r => `<tr>
+      <td>${r.date}</td>
+      <td>${escapeHtml(r.buyerDesig || r.buyerGSTIN)}</td>
+      <td>${escapeHtml(r.buyerState)}</td>
+      <td>${escapeHtml(r.seller)}</td>
+      <td>${escapeHtml(r.product)}</td>
+      <td>${r.qty.toLocaleString('en-IN')}</td>
+      <td>${r.unitPrice.toLocaleString('en-IN')}</td>
+      <td>${r.total.toLocaleString('en-IN')}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* =====================================================================
+   17. MASTER RENDER
+   ===================================================================== */
+let currentMyGSTIN = null;
+function render(rows){
+  if (!rows.length){
+    document.getElementById('dashboard').style.display = 'none';
+    return;
+  }
+  document.getElementById('dashboard').style.display = 'block';
+
+  // Detect "my GSTIN" = seller with most rows
+  const sellerCount = new Map();
+  for (const r of rows){
+    if (!r.sellerGSTIN) continue;
+    sellerCount.set(r.sellerGSTIN, (sellerCount.get(r.sellerGSTIN)||0)+1);
+  }
+  currentMyGSTIN = [...sellerCount.entries()]
+    .sort((a,b) => b[1]-a[1])[0]?.[0] || null;
+
+  renderKPIs(rows);
+  renderSummary(rows, currentMyGSTIN);
+  renderBuyerScorecard(rows);
+  renderCompetitors(rows, currentMyGSTIN);
+  renderCompStates(rows);
+  renderPriceEngine(rows);
+  renderProductMatrix(rows);
+  renderStateOpp(rows, currentMyGSTIN);
+  renderPersona(rows);
+  renderHeatmap(rows);
+  renderReorder(rows);
+  renderSizeTable(rows);
+  renderTable(rows);
+
+  // Charts
+  drawBar('cProdVal', '₹',
+    agg(rows, r => r.product, r => r.total), '#6a1b9a');
+  drawBar('cBuyer', '₹',
+    agg(rows, r => r.buyerDesig || r.buyerGSTIN, r => r.total), '#2e7d32');
+  drawBar('cPersona', 'Orders',
+    personaBreakdown(rows).map(p => [p.designation, p.orders]), '#c62828');
+
+  // Monthly line
+  const byMonth = new Map();
+  for (const r of rows){
+    if (!r.date) continue;
+    byMonth.set(r.date.slice(0,7), (byMonth.get(r.date.slice(0,7))||0)+1);
+  }
+  const months = [...byMonth.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  drawLine('cMonth', 'Orders', months.map(m=>m[0]), months.map(m=>m[1]));
+
+  // Order size pie
+  const bands = orderSizeBands(rows);
+  if (charts['cSize']) charts['cSize'].destroy();
+  charts['cSize'] = new Chart(document.getElementById('cSize'), {
+    type: 'doughnut',
+    data: {
+      labels: bands.map(b => b.band),
+      datasets: [{
+        data: bands.map(b => b.orders),
+        backgroundColor: ['#1a4d8f','#2e7d32','#ff9800','#c62828','#6a1b9a']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+               plugins: { legend: { position: 'right' } } }
+  });
+}
+
+/* =====================================================================
+   18. FILE HANDLING
+   ===================================================================== */
+function handle(file){
+  if (!file) return;
+  setStatus(`Reading "${file.name}" …`);
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const sheetName = findDataSheet(wb);
+      if (!sheetName){
+        setStatus(`❌ No GeM data sheet found. Sheets: ${wb.SheetNames.join(', ')}. ` +
+                  `Need at least 6 of the standard 14 columns.`, true);
+        return;
+      }
+      const ws = wb.Sheets[sheetName];
+      const raw = XLSX.utils.sheet_to_json(ws, {defval:'', raw:false})
+                      .map(normalizeRow);
+      const cleaned = raw
+        .map(cleanRow)
+        .filter(r => r.seller && r.seller.length > 0 && r.date);
+      if (!cleaned.length){
+        setStatus(`⚠️ Sheet "${sheetName}" found but 0 valid rows. ` +
+                  `Check headers match the GeM template.`, true);
+        return;
+      }
+      const stat = saveMaster(cleaned);
+      setStatus(`✅ Sheet "${sheetName}" · cleaned ${cleaned.length} · ` +
+                `added ${stat.added} new · master now ${stat.total.toLocaleString('en-IN')} rows.`);
+      render(loadMaster());
+    } catch (err){
+      console.error(err);
+      setStatus('❌ Error: ' + err.message, true);
+    }
+  };
+  rd.onerror = () => setStatus('❌ Could not read file.', true);
+  rd.readAsArrayBuffer(file);
+}
+
+/* =====================================================================
+   19. WIRING
+   ===================================================================== */
+const dropEl = document.getElementById('drop');
+const fileEl = document.getElementById('file');
+dropEl.addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', e => handle(e.target.files[0]));
+dropEl.addEventListener('dragover', e => {
+  e.preventDefault(); dropEl.classList.add('over');
+});
+dropEl.addEventListener('dragleave', () => dropEl.classList.remove('over'));
+dropEl.addEventListener('drop', e => {
+  e.preventDefault(); dropEl.classList.remove('over');
+  if (e.dataTransfer.files[0]) handle(e.dataTransfer.files[0]);
+});
+
+document.getElementById('resetBtn').addEventListener('click', resetMaster);
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = loadMaster();
+  if (!data.length){ setStatus('Nothing to export.', true); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gem_master_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+document.getElementById('tableSearch').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  renderTable(loadMaster());
+});
+
+// Buyer tabs
+document.querySelectorAll('[data-buyer]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-buyer]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    buyerFilter = btn.dataset.buyer;
+    renderBuyerScorecard(loadMaster());
+  });
+});
+// State tabs
+document.querySelectorAll('[data-state]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-state]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stateFilter = btn.dataset.state;
+    renderStateOpp(loadMaster(), currentMyGSTIN);
+  });
+});
+
+/* =====================================================================
+   20. BOOT
+   ===================================================================== */
+render(loadMaster());
+</script>
+</body>
+</html>
