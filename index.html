@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>GeM Label Seller Consultant</title>
+<title>GeM Label Seller — Command Centre</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{box-sizing:border-box;
---bg:#f4f6fa;--card:#fff;--tx:#18222f;--mu:#667386;--bd:#e3e8ef;--pr:#1a4d8f;--ac:#eaf2fb;--g:#2e7d32;--r:#b3261e}
-@media(prefers-color-scheme:dark){:root{--bg:#0f141b;--card:#18202b;--tx:#e6ebf2;--mu:#93a0b2;--bd:#2a3442;--pr:#6aa8f0;--ac:#1e2c3f;--g:#6fcf76;--r:#ff8a80}}
+:root{--bg:#f4f6fa;--card:#fff;--tx:#18222f;--mu:#667386;--bd:#e3e8ef;--pr:#1a4d8f;--ac:#eaf2fb;--g:#2e7d32;--r:#b3261e;--a:#c47f00}
+@media(prefers-color-scheme:dark){:root{--bg:#0f141b;--card:#18202b;--tx:#e6ebf2;--mu:#93a0b2;--bd:#2a3442;--pr:#6aa8f0;--ac:#1e2c3f;--g:#6fcf76;--r:#ff8a80;--a:#ffc107}}
 *{box-sizing:border-box}
-body{margin:0;padding:16px;background:var(--bg);color:var(--tx);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+body{margin:0;padding:16px;background:var(--bg);color:var(--tx);font:14px system-ui,-apple-system,sans-serif}
 h1{margin:0 0 4px;font-size:21px;color:var(--pr)}
+h2{margin:22px 0 10px;font-size:17px;color:var(--pr)}
 h3{margin:0 0 10px;font-size:15px}
 .mu{color:var(--mu);font-size:12px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 #drop{border:2px dashed var(--pr);border-radius:10px;padding:22px;text-align:center;cursor:pointer;background:var(--card);margin:10px 0;display:block;position:relative}
 #drop:hover,#drop.over{background:var(--ac)}
 #drop input[type=file]{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
@@ -26,43 +27,50 @@ button{cursor:pointer;background:var(--pr);color:#fff;border:0}
 button.s{background:var(--ac);color:var(--pr)}
 button.d{background:var(--r)}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0}
-.tab{background:var(--ac);color:var(--pr)}
+.tab{background:var(--ac);color:var(--pr);font-size:13px;padding:9px 16px}
 .tab.on{background:var(--pr);color:#fff}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--ac);border-radius:8px;padding:10px}
-.kpi b{display:block;font-size:19px;color:var(--pr)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:var(--ac);border-radius:8px;padding:12px}
+.kpi b{display:block;font-size:20px;color:var(--pr);line-height:1.2}
 .kpi span{font-size:11px;color:var(--mu)}
-.sc{overflow:auto;max-height:560px}
+.kpi small{font-size:10px;color:var(--mu);display:block;margin-top:4px;font-style:italic}
+.sc{overflow:auto;max-height:600px}
 table{border-collapse:collapse;width:100%;font-size:12.5px}
-th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
-th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap}
-.p{display:inline-block;padding:1px 8px;margin:1px;border-radius:9px;font-size:11px;font-weight:600;background:var(--ac);color:var(--pr)}
-.p.r{background:#fdecea;color:#b3261e}
-.p.a{background:#fff4e5;color:#a06000}
-.p.g{background:#e8f5e9;color:#2e7d32}
-.ch{position:relative;height:270px}
-ul.in{margin:0;padding-left:18px;line-height:1.75}
-.hb{display:flex;gap:3px}
-.hb div{flex:1;text-align:center;font-size:10px;padding:8px 0;border-radius:4px;background:var(--ac)}
-.pos{color:var(--g)}
-.neg{color:var(--r)}
-.alert{border-left:4px solid var(--pr);padding:8px 12px;background:var(--ac);border-radius:6px;margin:6px 0;font-size:13px}
-.alert.r{border-color:var(--r);background:#fdecea}
-.alert.a{border-color:#a06000;background:#fff4e5}
-.alert.g{border-color:var(--g);background:#e8f5e9}
-.rpt-page{background:#fff;padding:24px;color:#000}
-@media print{#drop,.bar,.tabs{display:none}.card{box-shadow:none}}
+th,td{padding:7px 9px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap;font-weight:600}
+.p{display:inline-block;padding:2px 8px;margin:1px;border-radius:9px;font-size:11px;font-weight:600;background:var(--ac);color:var(--pr)}
+.p.r{background:#fdecea;color:#b3261e}.p.a{background:#fff4e5;color:#a06000}.p.g{background:#e8f5e9;color:#2e7d32}.p.b{background:#e3f2fd;color:#1565c0}
+.ch{position:relative;height:280px}
+.pos{color:var(--g)}.neg{color:var(--r)}
+.hero{background:linear-gradient(135deg,#1a4d8f 0%,#2e7d32 100%);color:#fff;border-radius:12px;padding:20px;margin-bottom:14px}
+.hero h2{color:#fff;margin:0 0 10px}
+.hero .kpi{background:rgba(255,255,255,.15)}
+.hero .kpi b{color:#fff}.hero .kpi span,.hero .kpi small{color:rgba(255,255,255,.85)}
+.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;position:relative}
+.clickable:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,77,143,.15);border-color:var(--pr)}
+.rank{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--pr);color:#fff;font-weight:700;font-size:11px;margin-right:6px}
+.crumbs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;font-size:12px}
+.crumb{background:var(--pr);color:#fff;padding:4px 10px;border-radius:14px;cursor:pointer;font-size:12px}
+.crumb:hover{background:#0f3a6d}
+.crumb .x{margin-left:6px;opacity:.7}
+.empty{color:var(--mu);font-style:italic;padding:14px 0}
+.warn{background:#fff4e5;border-left:4px solid var(--a);padding:10px 14px;border-radius:6px;margin:8px 0;font-size:12.5px}
+.info{background:var(--ac);border-left:4px solid var(--pr);padding:10px 14px;border-radius:6px;margin:8px 0;font-size:12.5px}
+.slider{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px}
+.slider input[type=range]{flex:1;max-width:180px}
+.slider .val{color:var(--pr);font-weight:600;min-width:30px;text-align:right}
+@media print{#drop,.bar,.tabs,.crumb{display:none}.card{box-shadow:none}}
 </style>
 </head>
 <body>
 
-<h1>🏷️ GeM Label &amp; Sticker — Seller Consultant</h1>
-<div class="mu">Every row is a <b>won order</b> — prices = what buyers actually accepted. Sellers = competitors; buyers = prospects.</div>
+<h1>🏷️ GeM Label Seller — Command Centre</h1>
+<div class="mu">Every row is a <b>recorded purchase</b>. Prices shown are what buyers actually paid. Recommendations are analytical estimates, not guaranteed wins.</div>
 
 <label id="drop" for="file">
   📂 <b>Drop GeM Excel here</b> or click to select
   <input type="file" id="file" accept=".xlsx,.xls">
-  <div class="mu">Uploads merge into a de-duplicated master kept in this browser</div>
+  <div class="mu">Uploads merge into a de-duplicated master kept in this browser (localStorage — back up regularly via ⬇ JSON)</div>
 </label>
 
 <div id="st" class="mu"></div>
@@ -71,11 +79,9 @@ ul.in{margin:0;padding-left:18px;line-height:1.75}
   <div class="card bar">
     <label>From <input type="date" id="from"></label>
     <label>To <input type="date" id="to"></label>
-    <label>State <select id="state"></select></label>
-    <label>Type <select id="cat"></select></label>
     <label>Seller <select id="me"></select></label>
-    <button class="s" id="exp">⬇ JSON</button>
     <button class="s" id="xls">⬇ Excel</button>
+    <button class="s" id="jsn">⬇ Backup JSON</button>
     <button class="s" id="prt">🖨</button>
     <button class="d" id="rst">Reset</button>
   </div>
@@ -85,1285 +91,854 @@ ul.in{margin:0;padding-left:18px;line-height:1.75}
 
 <script>
 /* =========================================================
-   GLOBAL STATE
+   STATE
    ========================================================= */
-var KEY = 'gem_master_v5';
-var ALL = [];
-var F = [];
-var ME = '';
-var TAB = 'cmd';
-var SEL = 'ALL';
-var CH = {};
-var MX = { state: '', cat: '', size: '', seller: '', buyer: '', product: '', designation: '', brand: '', src: '' };
+var KEY='gem_master_v10';
+var ALL=[],F=[],ME='',TAB='cmd',CH={},MX={};
+var W={rec:20,freq:20,val:25,fit:15,comp:10,conf:10}; // adjustable weights
+var $=function(id){return document.getElementById(id)};
+var ls={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v);return 1}catch(e){return 0}},d:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+try{ALL=JSON.parse(ls.g(KEY)||'[]')}catch(e){ALL=[]}
 
-var $ = function(id){ return document.getElementById(id); };
+var EXP=['Generated Date','Buyer Designation','Buyer Contact No','Buyer GSTIN','Buyer Address','Seller Company Name','Seller Contact No','Seller GSTIN','Seller Address','Product Name','Ordered Quantity','Unit Price','Price (Inclusive of All Duties & Taxes) - INR'];
 
-var ls = {
-  g: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
-  s: function(k,v){ try { localStorage.setItem(k,v); return 1; } catch(e){ return 0; } },
-  d: function(k){ try { localStorage.removeItem(k); } catch(e){} }
-};
-
-try { ALL = JSON.parse(ls.g(KEY) || '[]'); } catch(e){ ALL = []; }
-
-var EXP = [
-  'Generated Date','Buyer Designation','Buyer Contact No','Buyer GSTIN',
-  'Buyer Address','Seller Company Name','Seller Contact No','Seller GSTIN',
-  'Seller Address','Product Name','Ordered Quantity','Unit Price',
-  'Price (Inclusive of All Duties & Taxes) - INR'
+var CATS=[
+  ['Thermal / Barcode rolls',/thermal|barcode|direct|ttr|ribbon|transfer/i],
+  ['Security / Tamper',/secur|tamper|hologram|void|seal|warranty/i],
+  ['A4 / Sheet labels',/\ba[34]\b|sheet|laser|inkjet/i],
+  ['Address / Shipping',/address|ship|courier|dispatch|postal|awb/i],
+  ['Asset / QR tags',/asset|inventory|qr|rfid|tag|serial/i],
+  ['Printed / Custom',/print|custom|logo|brand|personali/i],
+  ['Plain / Adhesive',/blank|plain|adhesive|self|paper|sticker|label/i]
 ];
 
-var CATS = [
-  ['Thermal / Barcode rolls', /thermal|barcode|direct|ttr|ribbon|transfer/i],
-  ['Security / Tamper', /secur|tamper|hologram|void|seal|warranty/i],
-  ['A4 / Sheet labels', /\ba[34]\b|sheet|laser|inkjet/i],
-  ['Address / Shipping', /address|ship|courier|dispatch|postal|awb/i],
-  ['Asset / QR tags', /asset|inventory|qr|rfid|tag|serial/i],
-  ['Printed / Custom', /print|custom|logo|brand|personali/i],
-  ['Plain / Adhesive', /blank|plain|adhesive|self|paper|sticker|label/i]
+var SEGMENTS=[
+  ['📮 Post Offices / Postal',/post ?office|supdt|spos|postmaster|postal|\brms\b|speed post|mail|sorting|head post|dak/i],
+  ['🏥 Hospitals / Health',/hospital|medical|health|aiims|doctor|nurse|phc|chc|\btb\b|nursing|clinic|ayurved|veterinary|dispensary|maternity/i],
+  ['🎓 Education / Colleges',/college|university|school|principal|professor|institute|\bkv\b|kendriya vidyalaya|polytechnic|\biit\b|\bnit\b|\biim\b|iiser/i],
+  ['✈️ Airports / Ports',/airport|port|air india|\baai\b|customs|cargo|terminal|immigration|export inspection|marine|shipping/i],
+  ['🚂 Railways',/railway|\bdrb\b|\bdrm\b|station master|coach|divisional/i],
+  ['🏛️ Govt Departments / PSU',/secretariat|collector|commissioner|director|department|ministry|nagar palika|municipal|\bpsu\b|corporation|authority|\blic\b|sbi|bank/i],
+  ['💼 Police / Defence',/police|defence|army|navy|air force|crpf|cisf|itbp|bsf|cbi|traffic|court|judicial|legal|magistrate/i],
+  ['⚡ Power / Utilities',/electricity|power|discom|energy|bsnl|bharat sanchar|utility|water works|jal board/i],
+  ['🔬 Research / Labs',/research|icar|csir|icmr|drdo|isro|cftri|niist/i],
+  ['🌾 Agriculture',/agriculture|krishi|farm|mandi|seed|horticulture|animal husbandry/i],
+  ['🎯 Other Govt',/.*/]
 ];
 
-var BRANDS = ['AKHIL','CORAL','NOVAJET','DESMAT','BRADY','CHECKO','GOLDCOLT','ODDY','RAJSON','TARSONS','RAINBOW','VLLPL','LABELKART','SAIRAKESH','DOOKS','SKMPPL','AADO','ROLLY','TG TECHNO GRAPHICS','M S PAPER ROLL','HAUSER','3M','AVERY BRAND','AVERY','super max','Texlabels','JIRAWALA PAPERS','PCAKG','swastic','SPECIALITY LABELS','Stickmore','Kores','kores','STICKMORE'];
+var BRANDS=['AKHIL','CORAL','NOVAJET','DESMAT','BRADY','CHECKO','GOLDCOLT','ODDY','RAJSON','TARSONS','RAINBOW','VLLPL','LABELKART','SAIRAKESH','DOOKS','SKMPPL','AADO','ROLLY','TG TECHNO GRAPHICS','M S PAPER ROLL','HAUSER','3M','AVERY BRAND','AVERY','Texlabels','JIRAWALA PAPERS','PCAKG','swastic','SPECIALITY LABELS','Stickmore','Kores','super max'];
 
-/* ⚠️  THE MISSING LINE — now added */
-var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var BANDS = [[1,50],[51,200],[201,1000],[1001,5000],[5001,1e12]];
+var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var BANDS=[[1,50],[51,200],[201,1000],[1001,5000],[5001,1e12]];
 
-function brand(p){
-  var up = String(p).toUpperCase();
-  for (var i = 0; i < BRANDS.length; i++){
-    if (up.indexOf(BRANDS[i].toUpperCase()) === 0) return BRANDS[i];
-    if (up.indexOf(BRANDS[i].toUpperCase() + ' ') >= 0) return BRANDS[i];
-  }
-  var m = String(p).match(/^([A-Z][A-Za-z0-9\-]{2,20})/);
-  return m ? m[1].toUpperCase() : '(unbranded)';
-}
-
-function cat(p){
-  for (var i = 0; i < CATS.length; i++) if (CATS[i][1].test(p)) return CATS[i][0];
-  return 'Other';
-}
-
-function size(p){
-  var m = String(p).match(/(\d+(?:\.\d+)?)\s*(?:mm|cm|in|inch)?\s*[x\u00D7*]\s*(\d+(?:\.\d+)?)\s*(mm|cm|inch|in)?/i);
-  return m ? m[1] + '\u00D7' + m[2] + (m[3] ? m[3].toLowerCase() : '') : '';
-}
-
-function tender(pdf){
-  if (/^GEMC-/i.test(pdf)) return 'Direct';
-  if (/^GEM-/i.test(pdf)) return 'Bid';
-  return 'Unknown';
-}
-
-function nk(k){
-  return String(k).replace(/[\u2013\u2014]/g,'-').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim();
-}
-
-function ct(s){ return String(s == null ? '' : s).replace(/\s{2,}/g,' ').trim(); }
-function td(s){ return String(s == null ? '' : s).replace(/[-\s]+$/,'').trim(); }
-function gst(s){ return String(s == null ? '' : s).replace(/\s*\(R\)\s*$/i,'').trim().toUpperCase(); }
-
-function num(v){
-  var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g,''));
-  return isNaN(n) ? 0 : n;
-}
-
-function parseState(a){
-  a = String(a || '');
-  var m = a.match(/([A-Z][A-Z &\.]{3,})-\d{6}/);
-  if (m) return m[1].trim();
-  m = a.match(/,\s*([A-Z][A-Za-z &\.]+)-\d{6}/);
-  return m ? m[1].trim().toUpperCase() : 'Unknown';
-}
-
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function cat(p){for(var i=0;i<CATS.length;i++)if(CATS[i][1].test(p))return CATS[i][0];return 'Other'}
+function segment(t){for(var i=0;i<SEGMENTS.length;i++)if(SEGMENTS[i][1].test(t))return SEGMENTS[i][0];return '🎯 Other Govt'}
+function size(p){var m=String(p).match(/(\d+(?:\.\d+)?)\s*(?:mm|cm|in|inch)?\s*[x\u00D7*]\s*(\d+(?:\.\d+)?)\s*(mm|cm|inch|in)?/i);return m?m[1]+'\u00D7'+m[2]+(m[3]?m[3].toLowerCase():''):''}
+function brand(p){var up=String(p).toUpperCase();for(var i=0;i<BRANDS.length;i++){if(up.indexOf(BRANDS[i].toUpperCase())===0)return BRANDS[i];if(up.indexOf(BRANDS[i].toUpperCase()+' ')>=0)return BRANDS[i]}var m=String(p).match(/^([A-Z][A-Za-z0-9\-]{2,20})/);return m?m[1].toUpperCase():'(unbranded)'}
+function tender(pdf){if(/^GEMC-/i.test(pdf))return'Direct';if(/^GEM-/i.test(pdf))return'Bid';return'Unknown'}
+function nk(k){return String(k).replace(/[\u2013\u2014]/g,'-').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim()}
+function ct(s){return String(s==null?'':s).replace(/\s{2,}/g,' ').trim()}
+function td(s){return String(s==null?'':s).replace(/[-\s]+$/,'').trim()}
+function gst(s){return String(s==null?'':s).replace(/\s*\(R\)\s*$/i,'').trim().toUpperCase()}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n}
+function parseState(a){a=String(a||'');var m=a.match(/([A-Z][A-Z &\.]{3,})-\d{6}/);if(m)return m[1].trim();m=a.match(/,\s*([A-Z][A-Za-z &\.]+)-\d{6}/);return m?m[1].trim().toUpperCase():'Unknown'}
 function parseDate(v){
-  if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
-  if (typeof v === 'number') return new Date(Date.UTC(1899,11,30) + v*86400000).toISOString().slice(0,10);
-  var s = String(v || '').trim();
-  if (!s) return '';
-  var m = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
-  if (m){
-    var months = 'janfebmaraprmayjunjulaugsepoctnovdec';
-    var i = months.indexOf(m[2].toLowerCase());
-    if (i >= 0 && i % 3 === 0){
-      var mm = String(i/3 + 1); if (mm.length < 2) mm = '0' + mm;
-      var dd = m[1]; if (dd.length < 2) dd = '0' + dd;
-      var yyyy = m[3].length === 2 ? '20' + m[3] : m[3];
-      return yyyy + '-' + mm + '-' + dd;
-    }
-  }
-  var d = new Date(s);
-  return isNaN(d) ? '' : d.toISOString().slice(0,10);
+  if(v instanceof Date&&!isNaN(v))return v.toISOString().slice(0,10);
+  if(typeof v==='number')return new Date(Date.UTC(1899,11,30)+v*864e5).toISOString().slice(0,10);
+  var s=String(v||'').trim();if(!s)return'';
+  var m=s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+  if(m){var mo='janfebmaraprmayjunjulaugsepoctnovdec';var i=mo.indexOf(m[2].toLowerCase());if(i>=0&&i%3===0){var mm=String(i/3+1);if(mm.length<2)mm='0'+mm;var dd=m[1];if(dd.length<2)dd='0'+dd;var yy=m[3].length===2?'20'+m[3]:m[3];return yy+'-'+mm+'-'+dd}}
+  var d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10)
 }
 
 function cleanRow(r){
-  var q = num(r['Ordered Quantity']);
-  var u = num(r['Unit Price']);
-  var t = num(r['Price (Inclusive of All Duties & Taxes) - INR']);
-  var p = ct(r['Product Name']);
-  var pdf = ct(r['One actual sample PDF'] || r['Sample PDF'] || r['PDF'] || '');
-  return {
-    date: parseDate(r['Generated Date']),
-    bd: ct(r['Buyer Designation']),
-    bp: td(r['Buyer Contact No']),
-    bg: gst(r['Buyer GSTIN']),
-    bs: parseState(r['Buyer Address']),
-    seller: ct(r['Seller Company Name']),
-    sg: gst(r['Seller GSTIN']),
-    ss: parseState(r['Seller Address']),
-    prod: p, cat: cat(p), size: size(p), brand: brand(p),
-    qty: q, unit: u, total: t > 0 ? t : q * u, src: tender(pdf)
-  };
-}
-
-function rowKey(r){ return [r.date, r.bg, r.sg, r.prod, r.qty, r.total].join('|'); }
-
-var sk = function(r){ return r.sg || r.seller; };
-var mine = function(r){ return ME && sk(r) === ME; };
-
-var sum = function(l, k){ var s = 0; for (var i = 0; i < l.length; i++) s += (l[i][k] || 0); return s; };
-
-function esc(s){
-  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-
-function fm(n){
-  if (n >= 1e7) return '\u20B9' + (n/1e7).toFixed(2) + ' Cr';
-  if (n >= 1e5) return '\u20B9' + (n/1e5).toFixed(2) + ' L';
-  return '\u20B9' + Math.round(n).toLocaleString('en-IN');
-}
-
-function r2(n){ return '\u20B9' + (n >= 100 ? Math.round(n) : n.toFixed(2)); }
-function ago(d){ return Math.round((Date.now() - new Date(d)) / 86400000); }
-function pc(x){ return (x * 100).toFixed(1) + '%'; }
-function L(n){ return Math.round(n).toLocaleString('en-IN'); }
-
-function grp(list, f){
-  var m = new Map();
-  for (var i = 0; i < list.length; i++){
-    var k = f(list[i]);
-    if (!k) continue;
-    if (!m.has(k)) m.set(k, []);
-    m.get(k).push(list[i]);
+  var q=num(r['Ordered Quantity']),u=num(r['Unit Price']),t=num(r['Price (Inclusive of All Duties & Taxes) - INR']);
+  var p=ct(r['Product Name']),pdf=ct(r['One actual sample PDF']||r['Sample PDF']||r['PDF']||'');
+  var buyerTxt=ct(r['Buyer Designation'])+' '+ct(r['Buyer Address']);
+  var flags=[];
+  if(!q||q<=0)flags.push('qty_invalid');
+  if(!u||u<=0)flags.push('unit_invalid');
+  if(!t||t<=0)flags.push('total_invalid');
+  return{
+    date:parseDate(r['Generated Date']),bd:ct(r['Buyer Designation']),bp:td(r['Buyer Contact No']),
+    bg:gst(r['Buyer GSTIN']),bs:parseState(r['Buyer Address']),
+    seller:ct(r['Seller Company Name']),sg:gst(r['Seller GSTIN']),ss:parseState(r['Seller Address']),
+    prod:p,cat:cat(p),size:size(p),brand:brand(p),
+    qty:q,unit:u,total:t>0?t:(q>0&&u>0?q*u:0),src:tender(pdf),seg:segment(buyerTxt),
+    flags:flags
   }
-  return m;
 }
+function rowKey(r){return[r.date,r.bg,r.sg,r.prod,r.qty,r.total].join('|')}
 
-function qt(a, p){
-  if (!a.length) return 0;
-  return a[Math.min(a.length - 1, Math.floor(a.length * p))];
+var sk=function(r){return r.sg||r.seller};
+var sum=function(l,k){var s=0;for(var i=0;i<l.length;i++)s+=(l[i][k]||0);return s};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fm(n){if(n>=1e7)return'\u20B9'+(n/1e7).toFixed(2)+' Cr';if(n>=1e5)return'\u20B9'+(n/1e5).toFixed(2)+' L';return'\u20B9'+Math.round(n).toLocaleString('en-IN')}
+function r2(n){return'\u20B9'+(n>=100?Math.round(n):n.toFixed(2))}
+function ago(d){return Math.round((Date.now()-new Date(d))/864e5)}
+function pc(x){return(x*100).toFixed(1)+'%'}
+function L(n){return Math.round(n).toLocaleString('en-IN')}
+function grp(list,f){var m=new Map();for(var i=0;i<list.length;i++){var k=f(list[i]);if(!k)continue;if(!m.has(k))m.set(k,[]);m.get(k).push(list[i])}return m}
+function qt(a,p){if(!a.length)return 0;return a[Math.min(a.length-1,Math.floor(a.length*p))]}
+function ps(list){var a=[];for(var i=0;i<list.length;i++){if(list[i].unit>0&&list[i].flags.indexOf('unit_invalid')<0)a.push(list[i].unit)}a.sort(function(x,y){return x-y});return{n:a.length,p10:qt(a,.1),p25:qt(a,.25),p40:qt(a,.4),p50:qt(a,.5),p75:qt(a,.75),p90:qt(a,.9),a:a}}
+function med(list){return ps(list).p50}
+function T(headers,rows){
+  var h='<div class="sc"><table><thead><tr>';
+  for(var i=0;i<headers.length;i++)h+='<th>'+headers[i]+'</th>';
+  h+='</tr></thead><tbody>';
+  for(var j=0;j<rows.length;j++){h+='<tr>';for(var k=0;k<rows[j].length;k++)h+='<td>'+rows[j][k]+'</td>';h+='</tr>'}
+  return h+'</tbody></table></div>'
 }
+function pill(t,c){return'<span class="p '+(c||'')+'">'+t+'</span>'}
 
-function T(headers, rows){
-  var h = '<div class="sc"><table><thead><tr>';
-  for (var i = 0; i < headers.length; i++) h += '<th>' + headers[i] + '</th>';
-  h += '</tr></thead><tbody>';
-  for (var j = 0; j < rows.length; j++){
-    h += '<tr>';
-    for (var k = 0; k < rows[j].length; k++) h += '<td>' + rows[j][k] + '</td>';
-    h += '</tr>';
+/* name caches */
+var _nc={seller:{},buyer:{}};
+function rebuildNameCaches(){
+  _nc={seller:{},buyer:{}};
+  for(var i=0;i<F.length;i++){
+    var r=F[i];
+    var sK=sk(r); if(sK&&!_nc.seller[sK])_nc.seller[sK]=r.seller||sK;
+    var bK=r.bg||r.bd; if(bK&&!_nc.buyer[bK])_nc.buyer[bK]=r.bd||r.bg||bK;
   }
-  return h + '</tbody></table></div>';
 }
+function sellerName(g){return _nc.seller[g]||g}
+function buyerName(g){return _nc.buyer[g]||g}
 
-function pill(t, c){ return '<span class="p ' + (c||'') + '">' + t + '</span>'; }
-function bandLabel(b){ return b[1] > 1e9 ? b[0] + '+' : b[0] + '\u2013' + b[1]; }
-
-function ps(list){
-  var a = [];
-  for (var i = 0; i < list.length; i++) if (list[i].unit > 0) a.push(list[i].unit);
-  a.sort(function(x,y){ return x - y; });
-  return { n: a.length, p10: qt(a,.1), p25: qt(a,.25), p40: qt(a,.4), p50: qt(a,.5), p75: qt(a,.75), p90: qt(a,.9), a: a };
-}
-
-function med(list){ return ps(list).p50; }
-
-function within(rows, daysBack){
-  return rows.filter(function(r){ var d = ago(r.date); return d >= daysBack && d < daysBack + 30; });
-}
-function last30(rows){ return within(rows, 0); }
-function prev30(rows){ return within(rows, 30); }
-
+/* =========================================================
+   ANALYTICS
+   ========================================================= */
 function buyersList(rows){
-  var pm = new Map();
-  grp(rows, function(r){ return r.prod; }).forEach(function(l, p){ pm.set(p, med(l)); });
-  var out = [];
-  grp(rows, function(r){ return r.bg || r.bd; }).forEach(function(l, k){
-    l.sort(function(a,b){ return a.date.localeCompare(b.date); });
-    var last = l[l.length-1], val = sum(l, 'total');
-    var ds = [], seen = {};
-    for (var i = 0; i < l.length; i++) if (!seen[l[i].date]){ seen[l[i].date] = 1; ds.push(l[i].date); }
-    var cyc = ds.length > 1 ? Math.round((new Date(ds[ds.length-1]) - new Date(ds[0])) / 86400000 / (ds.length - 1)) : 0;
-    var dsl = ago(last.date);
-    var due = cyc ? Math.round((new Date(last.date).getTime() + cyc*86400000 - Date.now()) / 86400000) : null;
-    var ix = [];
-    for (var j = 0; j < l.length; j++){
-      var mp = pm.get(l[j].prod);
-      if (l[j].unit > 0 && mp > 0) ix.push(l[j].unit / mp);
-    }
-    var pidx = ix.length ? ix.reduce(function(a,b){ return a+b; }, 0) / ix.length * 100 : 0;
-    var selArr = [];
-    grp(l, function(r){ return r.seller; }).forEach(function(v, kk){ selArr.push([kk, v.length]); });
-    selArr.sort(function(a,b){ return b[1] - a[1]; });
-    var cats = [];
-    grp(l, function(r){ return r.cat; }).forEach(function(v, kk){ cats.push([kk, sum(v,'total')]); });
-    cats.sort(function(a,b){ return b[1] - a[1]; });
-    out.push({ k: k, name: last.bd || k, state: last.bs, phone: last.bp, orders: l.length, val: val, avg: val/l.length, aq: Math.round(sum(l,'qty')/l.length), cyc: cyc, dsl: dsl, due: due, pidx: pidx, sel: selArr.map(function(x){ return x[0]; }), cat: cats[0] ? cats[0][0] : '', last: last.date });
+  var pm=new Map();grp(rows,function(r){return r.prod}).forEach(function(l,p){pm.set(p,med(l))});
+  var out=[];
+  grp(rows,function(r){return r.bg||r.bd}).forEach(function(l,k){
+    l.sort(function(a,b){return a.date.localeCompare(b.date)});
+    var last=l[l.length-1],val=sum(l,'total');
+    var ds=[],seen={};for(var i=0;i<l.length;i++)if(!seen[l[i].date]){seen[l[i].date]=1;ds.push(l[i].date)}
+    var cyc=ds.length>2?Math.round((new Date(ds[ds.length-1])-new Date(ds[0]))/864e5/(ds.length-1)):0;
+    var dsl=ago(last.date);
+    var due=cyc?Math.round((new Date(last.date).getTime()+cyc*864e5-Date.now())/864e5):null;
+    var ix=[];for(var j=0;j<l.length;j++){var mp=pm.get(l[j].prod);if(l[j].unit>0&&mp>0&&l[j].flags.indexOf('unit_invalid')<0)ix.push(l[j].unit/mp)}
+    var pidx=ix.length?ix.reduce(function(a,b){return a+b},0)/ix.length*100:0;
+    var selArr=[];grp(l,function(r){return r.seller}).forEach(function(v,kk){selArr.push([kk,v.length])});selArr.sort(function(a,b){return b[1]-a[1]});
+    var cats=[];grp(l,function(r){return r.cat}).forEach(function(v,kk){cats.push([kk,sum(v,'total')])});cats.sort(function(a,b){return b[1]-a[1]});
+    var segs=[];grp(l,function(r){return r.seg}).forEach(function(v,kk){segs.push([kk,sum(v,'total')])});segs.sort(function(a,b){return b[1]-a[1]});
+    // Confidence: 3+ independent purchase dates = HIGH; 2 = MED; 1 = LOW
+    var conf = ds.length>=3?'HIGH':ds.length===2?'MED':'LOW';
+    out.push({k:k,name:last.bd||k,state:last.bs,phone:last.bp,orders:l.length,val:val,avg:val/l.length,aq:Math.round(sum(l,'qty')/l.length),cyc:cyc,dsl:dsl,due:due,pidx:pidx,sel:selArr.map(function(x){return x[0]}),cat:cats[0]?cats[0][0]:'',seg:segs[0]?segs[0][0]:'',last:last.date,dates:ds.length,conf:conf,rows:l});
   });
-  var vals = out.map(function(b){ return b.val; }).sort(function(a,b){ return a-b; });
-  var whale = qt(vals, .9);
+  var vals=out.map(function(b){return b.val}).sort(function(a,b){return a-b});
+  var whale=qt(vals,.9);
   out.forEach(function(b){
-    b.tags = [];
-    if (b.due != null && b.due <= 14 && b.orders > 1) b.tags.push(['REORDER DUE','r']);
-    if (b.pidx >= 115 && b.orders > 0) b.tags.push(['OVERPAYING','a']);
-    if (b.val >= whale) b.tags.push(['BIG SPENDER','g']);
-    if (b.orders >= 4) b.tags.push(['LOYAL/FREQUENT','g']);
-    if (!b.tags.length) b.tags.push([b.orders === 1 ? 'ONE-TIME' : 'OCCASIONAL','']);
-    b.score = Math.min(100, Math.round((b.dsl < 30 ? 25 : b.dsl < 90 ? 18 : b.dsl < 180 ? 10 : 3) + Math.min(b.orders * 4, 20) + Math.min(Math.log10(b.val + 1) / 7 * 25, 25) + (b.due != null && b.due <= 14 ? 15 : 0) + (b.pidx >= 115 ? 15 : 0)));
+    b.tags=[];
+    if(b.due!=null&&b.due<=14&&b.orders>1)b.tags.push(['REORDER WINDOW','r']);
+    if(b.pidx>=115&&b.orders>0)b.tags.push(['PAID 15%+ ABOVE MED','a']);
+    if(b.val>=whale)b.tags.push(['TOP DECILE SPEND','g']);
+    if(b.orders>=4)b.tags.push(['REPEAT','g']);
+    if(b.orders===1)b.tags.push(['SINGLE PURCHASE','']);
+    if(!b.tags.length)b.tags.push(['OCCASIONAL','']);
   });
-  out.sort(function(a,b){ return b.score - a.score; });
-  return out;
+  return out.sort(function(a,b){return b.val-a.val})
+}
+
+function scoreBuyer(b){
+  // 0-100 score with adjustable weights (sum to 100)
+  var rec = b.dsl<30?100:b.dsl<90?75:b.dsl<180?45:b.dsl<365?20:5;
+  var freq = Math.min(100, b.orders*18);
+  var val = Math.min(100, Math.log10(b.val+1)*12);
+  var fit = 70; // neutral — product fit needs seller's catalog
+  var comp = b.sel.length<=1?100:b.sel.length<=3?70:40;
+  var conf = b.conf==='HIGH'?100:b.conf==='MED'?60:30;
+  var total = (rec*W.rec + freq*W.freq + val*W.val + fit*W.fit + comp*W.comp + conf*W.conf)/(W.rec+W.freq+W.val+W.fit+W.comp+W.conf);
+  return Math.round(total);
 }
 
 function sellersList(rows){
-  var tot = sum(rows, 'total');
-  var pm = new Map();
-  grp(rows, function(r){ return r.prod; }).forEach(function(l, p){ pm.set(p, med(l)); });
-  var now = Date.now();
-  var out = [];
-  grp(rows, sk).forEach(function(l, k){
-    var v = sum(l, 'total');
-    var ix = [];
-    for (var i = 0; i < l.length; i++){
-      var mp = pm.get(l[i].prod);
-      if (l[i].unit > 0 && mp > 0) ix.push(l[i].unit / mp);
-    }
-    var pidx = ix.length ? ix.reduce(function(a,b){ return a+b; }, 0) / ix.length * 100 : 0;
-    var rec = 0, prev = 0;
-    for (var j = 0; j < l.length; j++){
-      var age = (now - new Date(l[j].date)) / 86400000;
-      if (age <= 90) rec += l[j].total;
-      else if (age > 90 && age <= 180) prev += l[j].total;
-    }
-    var catArr = [];
-    grp(l, function(r){ return r.cat; }).forEach(function(v, kk){ catArr.push([kk, sum(v,'total')]); });
-    catArr.sort(function(a,b){ return b[1] - a[1]; });
-    var states = new Set(), buyerSet = new Set();
-    for (var m = 0; m < l.length; m++){
-      if (l[m].bs && l[m].bs !== 'Unknown') states.add(l[m].bs);
-      if (l[m].bg) buyerSet.add(l[m].bg);
-    }
-    var bid = 0, dir = 0;
-    for (var n = 0; n < l.length; n++){
-      if (l[n].src === 'Bid') bid++;
-      if (l[n].src === 'Direct') dir++;
-    }
-    out.push({ k: k, name: l[0].seller, orders: l.length, v: v, share: tot ? v/tot : 0, buyers: buyerSet.size, states: states.size, home: l[0].ss, aq: Math.round(sum(l,'qty')/l.length), pidx: pidx, cat: catArr[0] ? catArr[0][0] : '', trend: prev ? (rec - prev)/prev : (rec ? 1 : 0), bid: bid, dir: dir });
+  var tot=sum(rows,'total'),pm=new Map(),now=Date.now();
+  grp(rows,function(r){return r.prod}).forEach(function(l,p){pm.set(p,med(l))});
+  var out=[];
+  grp(rows,sk).forEach(function(l,k){
+    var v=sum(l,'total');
+    var ix=[];for(var i=0;i<l.length;i++){var mp=pm.get(l[i].prod);if(l[i].unit>0&&mp>0&&l[i].flags.indexOf('unit_invalid')<0)ix.push(l[i].unit/mp)}
+    var pidx=ix.length?ix.reduce(function(a,b){return a+b},0)/ix.length*100:0;
+    var rec=0,prev=0;
+    for(var j=0;j<l.length;j++){var age=(now-new Date(l[j].date))/864e5;if(age<=90)rec+=l[j].total;else if(age>90&&age<=180)prev+=l[j].total}
+    var catArr=[];grp(l,function(r){return r.cat}).forEach(function(v,kk){catArr.push([kk,sum(v,'total')])});catArr.sort(function(a,b){return b[1]-a[1]});
+    var segArr=[];grp(l,function(r){return r.seg}).forEach(function(v,kk){segArr.push([kk,sum(v,'total')])});segArr.sort(function(a,b){return b[1]-a[1]});
+    var states=new Set(),buyerSet=new Set();
+    for(var m=0;m<l.length;m++){if(l[m].bs&&l[m].bs!=='Unknown')states.add(l[m].bs);if(l[m].bg)buyerSet.add(l[m].bg)}
+    var bid=0,dir=0;for(var n=0;n<l.length;n++){if(l[n].src==='Bid')bid++;if(l[n].src==='Direct')dir++}
+    out.push({k:k,name:l[0].seller,orders:l.length,v:v,share:tot?v/tot:0,buyers:buyerSet.size,states:states.size,home:l[0].ss,aq:Math.round(sum(l,'qty')/l.length),pidx:pidx,cat:catArr[0]?catArr[0][0]:'',seg:segArr[0]?segArr[0][0]:'',trend:prev?(rec-prev)/prev:(rec?1:0),bid:bid,dir:dir});
   });
-  out.sort(function(a,b){ return b.v - a.v; });
-  return out;
+  return out.sort(function(a,b){return b.v-a.v})
 }
 
 function catsList(rows){
-  var out = [];
-  grp(rows, function(r){ return r.cat; }).forEach(function(l, c){
-    var s = ps(l), bs = new Set(), ss = new Set();
-    for (var i = 0; i < l.length; i++){ if (l[i].bg) bs.add(l[i].bg); ss.add(sk(l[i])); }
-    out.push({ c: c, v: sum(l,'total'), n: l.length, b: bs.size, s: ss.size, p50: s.p50, p25: s.p25, aq: Math.round(sum(l,'qty')/l.length) });
+  var out=[];
+  grp(rows,function(r){return r.cat}).forEach(function(l,c){
+    var s=ps(l),bs=new Set(),ss=new Set();
+    for(var i=0;i<l.length;i++){if(l[i].bg)bs.add(l[i].bg);ss.add(sk(l[i]))}
+    out.push({c:c,v:sum(l,'total'),n:l.length,b:bs.size,s:ss.size,p50:s.p50,p25:s.p25,aq:Math.round(sum(l,'qty')/l.length)});
   });
-  out.sort(function(a,b){ return b.v - a.v; });
-  return out;
+  return out.sort(function(a,b){return b.v-a.v})
+}
+
+function segList(rows){
+  var tot=sum(rows,'total'),out=[];
+  grp(rows,function(r){return r.seg}).forEach(function(l,s){
+    var bs=new Set(),ss=new Set(),stSet=new Set();
+    for(var i=0;i<l.length;i++){if(l[i].bg)bs.add(l[i].bg);ss.add(sk(l[i]));if(l[i].bs&&l[i].bs!=='Unknown')stSet.add(l[i].bs)}
+    var topSt=[];grp(l,function(r){return r.bs!=='Unknown'?r.bs:null}).forEach(function(x,kk){topSt.push([kk,sum(x,'total')])});topSt.sort(function(a,b){return b[1]-a[1]});
+    var topCat=[];grp(l,function(r){return r.cat}).forEach(function(x,kk){topCat.push([kk,sum(x,'total')])});topCat.sort(function(a,b){return b[1]-a[1]});
+    var samples=l.slice(0,3).map(function(r){return r.bd}).join(' · ');
+    out.push({s:s,v:sum(l,'total'),n:l.length,share:tot?sum(l,'total')/tot:0,b:bs.size,sl:ss.size,states:stSet.size,avg:sum(l,'total')/l.length,topState:topSt[0]?topSt[0][0]:'',topCat:topCat[0]?topCat[0][0]:'',sample:samples});
+  });
+  return out.sort(function(a,b){return b.v-a.v})
 }
 
 function geoList(rows){
-  var m = grp(rows, function(r){ return r.bs !== 'Unknown' ? r.bs : null; });
-  var mx = 1;
-  m.forEach(function(l){ var v = sum(l, 'total'); if (v > mx) mx = v; });
-  var out = [];
-  m.forEach(function(l, s){
-    var v = sum(l, 'total');
-    var sellerArr = [];
-    grp(l, sk).forEach(function(x){ sellerArr.push(sum(x, 'total')); });
-    sellerArr.sort(function(a,b){ return b - a; });
-    var t1 = v ? sellerArr[0] / v : 0;
-    var bs = new Set();
-    for (var i = 0; i < l.length; i++) if (l[i].bg) bs.add(l[i].bg);
-    var locCount = 0;
-    for (var j = 0; j < l.length; j++) if (l[j].ss === s) locCount++;
-    var loc = locCount / l.length;
-    var pr = ps(l);
-    out.push({ s: s, v: v, n: l.length, b: bs.size, sl: sellerArr.length, p50: pr.p50, avg: v/l.length, t1: t1, loc: loc, ease: Math.round(50 * v/mx + 30 * (1 - t1) + 20 * Math.min(bs.size/20, 1)) });
+  var m=grp(rows,function(r){return r.bs!=='Unknown'?r.bs:null});
+  var mx=1;m.forEach(function(l){var v=sum(l,'total');if(v>mx)mx=v});
+  var out=[];
+  m.forEach(function(l,s){
+    var v=sum(l,'total');
+    var sellerArr=[];grp(l,sk).forEach(function(x){sellerArr.push(sum(x,'total'))});sellerArr.sort(function(a,b){return b-a});
+    var t1=v?sellerArr[0]/v:0;
+    var bs=new Set();for(var i=0;i<l.length;i++)if(l[i].bg)bs.add(l[i].bg);
+    var locCount=0;for(var j=0;j<l.length;j++)if(l[j].ss===s)locCount++;
+    var loc=locCount/l.length,pr=ps(l);
+    out.push({s:s,v:v,n:l.length,b:bs.size,sl:sellerArr.length,p50:pr.p50,avg:v/l.length,t1:t1,loc:loc,ease:Math.round(50*v/mx+30*(1-t1)+20*Math.min(bs.size/20,1))});
   });
-  out.sort(function(a,b){ return b.ease - a.ease; });
-  return out;
+  return out.sort(function(a,b){return b.ease-a.ease})
 }
 
-function fiscalQ4(rows){
-  var t = sum(rows, 'total');
-  if (!t) return 0;
-  var q1 = 0;
-  for (var i = 0; i < rows.length; i++){
-    var m = +rows[i].date.slice(5,7) - 1;
-    if (m === 0 || m === 1 || m === 2) q1 += rows[i].total;
+function fiscalQ4(rows){var t=sum(rows,'total');if(!t)return 0;var q=0;for(var i=0;i<rows.length;i++){var m=+rows[i].date.slice(5,7)-1;if(m===0||m===1||m===2)q+=rows[i].total}return q/t}
+
+/* Data quality report */
+function dqReport(rows){
+  var issues=[];
+  var totalRows=rows.length;
+  var missingPrice=0,zeroQty=0,negativeQty=0,badDate=0,noSeller=0,noBuyer=0,noProduct=0,outlierPrice=0;
+  var prices=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    if(!r.total||r.total<=0)missingPrice++;
+    if(r.qty<=0)zeroQty++;
+    if(r.qty<0)negativeQty++;
+    if(!r.date||r.date.length!==10)badDate++;
+    if(!r.seller)noSeller++;
+    if(!r.bg&&!r.bd)noBuyer++;
+    if(!r.prod)noProduct++;
+    if(r.unit>0)prices.push(r.unit);
   }
-  return q1 / t;
+  prices.sort(function(a,b){return a-b});
+  var p50=qt(prices,.5),p99=qt(prices,.99);
+  for(var j=0;j<rows.length;j++){
+    if(rows[j].unit>0&&rows[j].unit>p99*3)outlierPrice++;
+  }
+  issues.push(['Missing / zero price (total)',missingPrice,'r']);
+  issues.push(['Zero quantity',zeroQty,'a']);
+  issues.push(['Negative quantity',negativeQty,'r']);
+  issues.push(['Invalid or missing date',badDate,'r']);
+  issues.push(['Missing seller name',noSeller,'a']);
+  issues.push(['Missing buyer identifier',noBuyer,'r']);
+  issues.push(['Missing product name',noProduct,'a']);
+  issues.push(['Unit price >3× 99th pct (possible outliers)',outlierPrice,'a']);
+  var recon=sum(rows,'total');
+  return{issues:issues,totalRows:totalRows,recon:recon,p50:p50};
 }
 
-function deltas(rows){
-  var cur = last30(rows), prev = prev30(rows);
-  function agg(list, f, vf){
-    var m = new Map();
-    for (var i = 0; i < list.length; i++){
-      var k = f(list[i]);
-      if (!k) continue;
-      m.set(k, (m.get(k) || 0) + (vf(list[i]) || 0));
-    }
-    return m;
-  }
-  function diff(a, b){
-    var out = [];
-    var keys = new Set();
-    a.forEach(function(v, k){ keys.add(k); });
-    b.forEach(function(v, k){ keys.add(k); });
-    keys.forEach(function(k){
-      var n = a.get(k) || 0, o = b.get(k) || 0;
-      if (n === 0 && o === 0) return;
-      var delta = o ? (n - o) / o : (n > 0 ? 1 : 0);
-      out.push({ k: k, now: n, prev: o, delta: delta, change: n - o });
-    });
-    out.sort(function(x,y){ return Math.abs(y.change) - Math.abs(x.change); });
-    return out;
-  }
-  var cPrice = ps(cur), pPrice = ps(prev);
-  return {
-    buyer: diff(agg(cur, function(r){ return r.bg || r.bd; }, function(r){ return r.total; }), agg(prev, function(r){ return r.bg || r.bd; }, function(r){ return r.total; })),
-    seller: diff(agg(cur, sk, function(r){ return r.total; }), agg(prev, sk, function(r){ return r.total; })),
-    size: diff(agg(cur, function(r){ return r.size; }, function(r){ return r.total; }), agg(prev, function(r){ return r.size; }, function(r){ return r.total; })),
-    state: diff(agg(cur, function(r){ return r.bs !== 'Unknown' ? r.bs : null; }, function(r){ return r.total; }), agg(prev, function(r){ return r.bs !== 'Unknown' ? r.bs : null; }, function(r){ return r.total; })),
-    cat: diff(agg(cur, function(r){ return r.cat; }, function(r){ return r.total; }), agg(prev, function(r){ return r.cat; }, function(r){ return r.total; })),
-    price: { n: cPrice.n, prev: pPrice.n, p50: cPrice.p50, p50Prev: pPrice.p50, delta: pPrice.p50 ? (cPrice.p50 - pPrice.p50) / pPrice.p50 : 0 },
-    totals: { cur: sum(cur, 'total'), prev: sum(prev, 'total'), orders: cur.length, ordersPrev: prev.length },
-    names: function(g){
-      var m = new Map();
-      for (var i = 0; i < rows.length; i++){
-        var k = g(rows[i]);
-        if (!k) continue;
-        if (!m.has(k)) m.set(k, rows[i]);
-      }
-      return m;
-    }
-  };
-}
-
-function watchlist(rows){
-  var alerts = [];
-  grp(rows, sk).forEach(function(l){
-    var c = ps(last30(l)), p = ps(prev30(l));
-    if (c.n >= 2 && p.n >= 2 && p.p50){
-      var d = (c.p50 - p.p50) / p.p50;
-      if (d <= -0.08) alerts.push({ t: 'r', m: '<b>' + esc(l[0].seller) + '</b> cut prices ' + (-d*100).toFixed(0) + '% in last 30 days (' + r2(p.p50) + ' → ' + r2(c.p50) + ')' });
-      if (d >= 0.08) alerts.push({ t: 'g', m: '<b>' + esc(l[0].seller) + '</b> raised prices ' + (d*100).toFixed(0) + '% — opportunity to undercut' });
-    }
-  });
-  grp(rows, function(r){ return r.bg; }).forEach(function(l, k){
-    if (l.length >= 3){
-      var last = l.map(function(r){ return r.date; }).sort().pop();
-      var dd = ago(last);
-      if (dd >= 180) alerts.push({ t: 'a', m: 'Buyer <b>' + esc(l[0].bd || k) + '</b> (' + l.length + ' past orders) hasn\'t ordered in ' + dd + ' days — win-back call' });
-    }
-  });
-  var recent = last30(rows);
-  for (var i = 0; i < recent.length; i++){
-    if (recent[i].total >= 1e5) alerts.push({ t: 'g', m: 'Large recent order: <b>' + fm(recent[i].total) + '</b> — ' + esc(recent[i].bd || recent[i].bg) + ' in ' + esc(recent[i].bs) });
-  }
-  return alerts.slice(0, 15);
-}
+/* =========================================================
+   DRILL
+   ========================================================= */
+function drill(dim,val){MX={};MX[dim]=val;TAB='mx';show();setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'})},50)}
+function mxClearOne(dim){delete MX[dim];show()}
+function mxClearAll(){MX={};show()}
 
 function mxRows(rows){
   return rows.filter(function(r){
-    if (MX.state && r.bs !== MX.state) return false;
-    if (MX.cat && r.cat !== MX.cat) return false;
-    if (MX.size && r.size !== MX.size) return false;
-    if (MX.seller && sk(r) !== MX.seller) return false;
-    if (MX.buyer && (r.bg || r.bd) !== MX.buyer) return false;
-    if (MX.product && r.prod !== MX.product) return false;
-    if (MX.designation && r.bd !== MX.designation) return false;
-    if (MX.brand && r.brand !== MX.brand) return false;
-    if (MX.src && r.src !== MX.src) return false;
-    return true;
-  });
-}
-
-function mxActiveCount(){
-  var n = 0;
-  Object.keys(MX).forEach(function(k){ if (MX[k]) n++; });
-  return n;
-}
-
-/* ============ VIEWS ============ */
-function vCmd(){
-  var tot = sum(F, 'total');
-  var buyers = buyersList(F), sellers = sellersList(F), n = F.length;
-  var rep = buyers.filter(function(b){ return b.orders > 1; }).length;
-  var top3 = sellers.slice(0, 3).reduce(function(a, s){ return a + s.share; }, 0);
-  var catsArr = catsList(F), P = ps(F);
-  var mo = [0,0,0,0,0,0,0,0,0,0,0,0];
-  F.forEach(function(r){ mo[+r.date.slice(5,7) - 1] += r.total; });
-  var ins = [];
-  var niche = catsArr.slice().sort(function(a, b){ return b.v/b.s - a.v/a.s; })[0];
-  if (niche) ins.push('Best value-per-competitor niche: <b>' + esc(niche.c) + '</b> — ' + fm(niche.v) + ' shared by only ' + niche.s + ' sellers.');
-  var due = buyers.filter(function(b){ return b.due != null && b.due <= 14 && b.orders > 1; }).length;
-  var ov = buyers.filter(function(b){ return b.pidx >= 115; }).length;
-  ins.push('<b>' + due + '</b> buyers due to reorder within 14 days; <b>' + ov + '</b> buyers pay 15%+ above market.');
-  ins.push('Top 3 sellers hold <b>' + pc(top3) + '</b> of value — ' + (top3 < 0.35 ? 'fragmented market, easy to enter' : top3 < 0.6 ? 'moderately concentrated' : 'concentrated') + '.');
-  ins.push('Jan–Mar (FY budget flush) carries <b>' + pc(fiscalQ4(F)) + '</b> of demand; peak month is <b>' + MN[mo.indexOf(Math.max.apply(null, mo))] + '</b>.');
-  var al = watchlist(F);
-  if (al.length) ins.push('<b>' + al.length + '</b> watchlist alerts need attention (see Deltas tab).');
-
-  var html = '<div class="card"><div class="kpis">';
-  html += '<div class="kpi"><b>' + fm(tot) + '</b><span>Market value</span></div>';
-  html += '<div class="kpi"><b>' + n + '</b><span>Orders</span></div>';
-  html += '<div class="kpi"><b>' + fm(tot / (n||1)) + '</b><span>Avg order value</span></div>';
-  html += '<div class="kpi"><b>' + L(sum(F,'qty') / (n||1)) + '</b><span>Avg qty / order</span></div>';
-  html += '<div class="kpi"><b>' + r2(P.p50) + '</b><span>Median unit price</span></div>';
-  html += '<div class="kpi"><b>' + buyers.length + '</b><span>Buyers</span></div>';
-  html += '<div class="kpi"><b>' + pc(buyers.length ? rep / buyers.length : 0) + '</b><span>Repeat buyers</span></div>';
-  html += '<div class="kpi"><b>' + sellers.length + '</b><span>Sellers</span></div>';
-  html += '</div></div>';
-  html += '<div class="card"><h3>💡 Consultant\'s headlines</h3><ul class="in">' + ins.map(function(i){ return '<li>' + i + '</li>'; }).join('') + '</ul></div>';
-  html += '<div class="grid"><div class="card"><h3>Monthly demand (\u20B9)</h3><div class="ch"><canvas id="c1"></canvas></div></div><div class="card"><h3>Revenue by label type</h3><div class="ch"><canvas id="c2"></canvas></div></div></div>';
-  return html;
-}
-
-function dCmd(){
-  var m = new Map();
-  F.forEach(function(r){ var k = r.date.slice(0,7); m.set(k, (m.get(k)||0) + r.total); });
-  var ks = Array.from(m.keys()).sort();
-  mk('c1', { type: 'line', data: { labels: ks, datasets: [{ data: ks.map(function(k){ return m.get(k); }), borderColor: '#1a4d8f', backgroundColor: '#1a4d8f33', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-  var catsArr = catsList(F);
-  mk('c2', { type: 'doughnut', data: { labels: catsArr.map(function(c){ return c.c; }), datasets: [{ data: catsArr.map(function(c){ return c.v; }), backgroundColor: ['#1a4d8f','#2e7d32','#ff9800','#c62828','#6a1b9a','#00838f','#8d6e63','#b0bec5'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
-}
-
-function vBuy(){
-  var f = window.bf || 'all';
-  var buyers = buyersList(F);
-  function hasTag(t){ return function(b){ return b.tags.some(function(x){ return x[0] === t; }); }; }
-  var filters = { all: function(){ return true; }, due: hasTag('REORDER DUE'), over: hasTag('OVERPAYING'), big: hasTag('BIG SPENDER'), loyal: hasTag('LOYAL/FREQUENT'), new: function(b){ return b.orders === 1; } };
-  var labels = { all: 'All', due: 'Reorder due', over: 'Overpaying', big: 'Big spenders', loyal: 'Frequent', new: 'One-time' };
-  function pitch(b){
-    if (b.tags[0][0] === 'REORDER DUE') return 'Call now — quote before they reorder';
-    if (b.tags[0][0] === 'OVERPAYING') return 'Pitch ' + Math.round(b.pidx - 100) + '% saving vs market';
-    if (b.tags[0][0] === 'BIG SPENDER') return 'Offer volume slab + rate contract';
-    if (b.tags[0][0] === 'LOYAL/FREQUENT') return 'Offer annual rate contract';
-    return 'Intro + sample + competitive quote';
-  }
-  var html = '<div class="card"><div class="bar">';
-  Object.keys(labels).forEach(function(x){
-    html += '<button class="' + (f === x ? '' : 's') + '" onclick="window.bf=\'' + x + '\';show()">' + labels[x] + '</button>';
-  });
-  html += '<button class="s" onclick="csv()">⬇ Call list CSV</button></div>';
-  html += '<div class="mu">Score = recency + frequency + value + reorder-due + overpaying. Price paid 100 = market median.</div>';
-  html += T(['Score','Buyer','State','Tags','Orders','Total ₹','Avg order ₹','Avg qty','Cycle','Next due','Price paid','Buys from','Main type','Contact & pitch'],
-    buyers.filter(filters[f]).slice(0, 120).map(function(b){
-      var status = b.due == null ? '—' : b.due < 0 ? '<span class="neg">' + (-b.due) + 'd overdue</span>' : 'in ' + b.due + 'd';
-      var contact = (b.phone ? '<a href="tel:' + esc(b.phone) + '">' + esc(b.phone) + '</a><br>' : '') + '<span class="mu">' + pitch(b) + '</span>';
-      return ['<b>' + b.score + '</b>', esc(b.name.slice(0, 36)), esc(b.state), b.tags.map(function(t){ return pill(t[0], t[1]); }).join(''), b.orders, L(b.val), L(b.avg), L(b.aq), b.cyc ? b.cyc + 'd' : '—', status, b.pidx ? b.pidx.toFixed(0) : '—', esc(b.sel.slice(0, 2).join(', ').slice(0, 44)), esc(b.cat), contact];
-    }));
-  html += '</div>';
-  return html;
-}
-
-function csv(){
-  function q(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
-  var rows = [['Score','Buyer','GSTIN','State','Tags','Orders','Total','AvgOrder','AvgQty','CycleDays','NextDueDays','PricePaidIdx','CurrentSellers','Phone']];
-  buyersList(F).forEach(function(b){ rows.push([b.score, b.name, b.k, b.state, b.tags.map(function(x){ return x[0]; }).join('/'), b.orders, Math.round(b.val), Math.round(b.avg), b.aq, b.cyc, b.due, Math.round(b.pidx), b.sel.slice(0,2).join('; '), b.phone]); });
-  dl(rows.map(function(r){ return r.map(q).join(','); }).join('\n'), 'gem_buyer_call_list.csv', 'text/csv');
-}
-
-function selRows(){
-  if (SEL.indexOf('c:') === 0) return F.filter(function(r){ return r.cat === SEL.slice(2); });
-  if (SEL.indexOf('p:') === 0) return F.filter(function(r){ return r.prod === SEL.slice(2); });
-  if (SEL.indexOf('z:') === 0) return F.filter(function(r){ return r.size === SEL.slice(2); });
-  return F;
-}
-
-function vPrice(){
-  var cs = catsList(F);
-  var prods = [];
-  grp(F, function(r){ return r.prod; }).forEach(function(l, p){ if (l.length >= 3) prods.push([p, l.length]); });
-  prods.sort(function(a,b){ return b[1] - a[1]; });
-  prods = prods.slice(0, 40);
-  var zs = [];
-  grp(F, function(r){ return r.size; }).forEach(function(l, s){ if (l.length >= 3) zs.push([s, l.length]); });
-  zs.sort(function(a,b){ return b[1] - a[1]; });
-  zs = zs.slice(0, 15);
-  function opt(v, t){ return '<option value="' + esc(v) + '"' + (v === SEL ? ' selected' : '') + '>' + esc(t) + '</option>'; }
-  var R = selRows(), S = ps(R);
-  var rec = R.filter(function(r){ return ago(r.date) <= 90; });
-  var pre = R.filter(function(r){ return ago(r.date) > 90 && ago(r.date) <= 180; });
-  var mr = med(rec), mp = med(pre), tr = mr && mp ? (mr - mp) / mp : null;
-  var bs = BANDS.map(function(b){ var l = R.filter(function(r){ return r.qty >= b[0] && r.qty <= b[1]; }); return { b: b, l: l, s: ps(l) }; });
-  var base = null;
-  for (var i = 0; i < bs.length; i++) if (bs[i].s.n >= 3){ base = bs[i]; break; }
-  var html = '<div class="card"><div class="bar"><b>Analyse:</b><select onchange="SEL=this.value;show()">';
-  html += opt('ALL', 'All label products');
-  html += '<optgroup label="Label type">'; cs.forEach(function(c){ html += opt('c:' + c.c, c.c); }); html += '</optgroup>';
-  html += '<optgroup label="Size">'; zs.forEach(function(z){ html += opt('z:' + z[0], 'Size ' + z[0]); }); html += '</optgroup>';
-  html += '<optgroup label="Product (top 40)">'; prods.forEach(function(p){ html += opt('p:' + p[0], p[0].slice(0, 70)); }); html += '</optgroup>';
-  html += '</select><span class="mu">' + S.n + ' priced orders';
-  if (tr != null) html += ' · 90-day trend <b class="' + (tr > 0 ? 'pos' : 'neg') + '">' + (tr > 0 ? '▲' : '▼') + ' ' + Math.abs(tr*100).toFixed(1) + '%</b>';
-  html += '</span></div><div class="mu">Unit price may be per piece, roll or pack — compare within one product/size.</div></div>';
-  html += '<div class="grid"><div class="card"><h3>🎯 Bid ladder</h3>';
-  html += T(['Strategy','Price','Use when'], [
-    ['Floor · P10', '<b>' + r2(S.p10) + '</b>', 'Only huge bulk'],
-    ['Aggressive · P25', '<b class="pos">' + r2(S.p25) + '</b>', 'Win new buyers'],
-    ['Competitive · P40', '<b class="pos">' + r2(S.p40) + '</b>', '<b>Recommended default</b>'],
-    ['Market · P50', '<b>' + r2(S.p50) + '</b>', 'Safe with good rating'],
-    ['Premium · P75', '<b>' + r2(S.p75) + '</b>', 'Only with unique spec']
-  ]);
-  html += '<div class="mu">P25 means 75% of buyers paid more than this.</div></div>';
-  html += '<div class="card"><h3>🧮 Bid calculator</h3><div class="bar">';
-  html += '<label>Cost/unit ₹ <input id="cc" type="number" step="any" oninput="calc()" style="width:90px"></label>';
-  html += '<label>Your price ₹ <input id="cp" type="number" step="any" value="' + (S.p40 ? S.p40.toFixed(2) : '') + '" oninput="calc()" style="width:90px"></label>';
-  html += '<label>Qty <input id="cq" type="number" value="500" oninput="calc()" style="width:80px"></label>';
-  html += '</div><div id="cout"></div></div></div>';
-  html += '<div class="card"><h3>📦 Price by order quantity</h3>';
-  html += T(['Qty band','Orders','P25','Median','P75','vs first','Avg order ₹'],
-    bs.map(function(x){
-      if (x.s.n >= 3){
-        var vsFirst = base && x.s.p50 ? '<span class="' + (x.s.p50 < base.s.p50 ? 'neg' : 'pos') + '">' + ((x.s.p50 / base.s.p50 - 1) * 100).toFixed(0) + '%</span>' : '—';
-        return [bandLabel(x.b), x.s.n, r2(x.s.p25), '<b>' + r2(x.s.p50) + '</b>', r2(x.s.p75), vsFirst, L(sum(x.l, 'total') / x.l.length)];
-      }
-      return [bandLabel(x.b), x.l.length, '—', '—', '—', '—', '—'];
-    }));
-  html += '<div class="ch" style="height:210px;margin-top:10px"><canvas id="c3"></canvas></div></div>';
-  return html;
-}
-
-function calc(){
-  var R = selRows(), a = ps(R).a;
-  var p = +$('cp').value, c = +$('cc').value, q = +$('cq').value;
-  if (!p || !a.length){ $('cout').innerHTML = '<span class="mu">Enter a price.</span>'; return; }
-  var win = 0;
-  for (var i = 0; i < a.length; i++) if (a[i] >= p) win++;
-  var u = win / a.length, m = c ? (p - c) / p : null;
-  var out = '<div>Undercuts <b>' + (u * 100).toFixed(0) + '%</b> of past winning prices → ';
-  if (u > 0.7) out += pill('Very likely to win', 'g');
-  else if (u > 0.45) out += pill('Competitive', 'g');
-  else if (u > 0.25) out += pill('Needs USP', 'a');
-  else out += pill('Likely too high', 'r');
-  out += '</div>';
-  if (m != null){
-    out += '<div>Margin <b class="' + (m < 0.1 ? 'neg' : 'pos') + '">' + (m * 100).toFixed(1) + '%</b> · profit on ' + L(q) + ' units <b>' + fm((p - c) * q) + '</b></div>';
-    if (c) out += '<div class="mu">Lowest price keeping 10% margin: ' + r2(c / 0.9) + '</div>';
-  } else out += '<div>Order value ' + fm(p * q) + '</div>';
-  $('cout').innerHTML = out;
-}
-
-function dPrice(){
-  var R = selRows();
-  var bs = BANDS.map(function(b){ return ps(R.filter(function(r){ return r.qty >= b[0] && r.qty <= b[1]; })); });
-  mk('c3', { type: 'bar', data: { labels: BANDS.map(bandLabel), datasets: [{ label: 'Median', data: bs.map(function(s){ return s.n >= 3 ? s.p50 : null; }), backgroundColor: '#1a4d8f' }, { label: 'P25', data: bs.map(function(s){ return s.n >= 3 ? s.p25 : null; }), backgroundColor: '#2e7d32' }] }, options: { responsive: true, maintainAspectRatio: false } });
-  calc();
-}
-
-function vProd(){
-  var cs = catsList(F);
-  var Z = [];
-  grp(F, function(r){ return r.size; }).forEach(function(l, s){
-    var bs = new Set(), xs = new Set();
-    for (var i = 0; i < l.length; i++){ if (l[i].bg) bs.add(l[i].bg); xs.add(sk(l[i])); }
-    Z.push({ s: s, v: sum(l,'total'), n: l.length, b: bs.size, sl: xs.size, p: med(l) });
-  });
-  Z.sort(function(a,b){ return b.v - a.v; });
-  Z = Z.slice(0, 25);
-  var P = [];
-  grp(F, function(r){ return r.prod; }).forEach(function(l, p){
-    var bs = new Set(), xs = new Set();
-    for (var i = 0; i < l.length; i++){ if (l[i].bg) bs.add(l[i].bg); xs.add(sk(l[i])); }
-    P.push({ p: p, v: sum(l,'total'), n: l.length, b: bs.size, sl: xs.size, aq: Math.round(sum(l,'qty')/l.length), m: med(l) });
-  });
-  P.sort(function(a,b){ return b.v - a.v; });
-  P = P.slice(0, 50);
-  function sig(x){ if (x.sl <= 2 && x.n >= 3) return pill('LOW COMPETITION', 'g'); if (x.sl >= 8) return pill('CROWDED', 'r'); return ''; }
-  var html = '<div class="card"><h3>🏷️ Label types</h3>';
-  html += T(['Type','Revenue','Orders','Buyers','Sellers','₹ per seller','P25','Median','Avg qty'], cs.map(function(c){ return [esc(c.c), fm(c.v), c.n, c.b, c.s, fm(c.v/c.s), r2(c.p25), r2(c.p50), L(c.aq)]; }));
-  html += '</div><div class="card"><h3>📐 Hot sizes</h3>';
-  html += T(['Size','Revenue','Orders','Buyers','Sellers','Median ₹','Signal'], Z.map(function(z){ return [esc(z.s || '(no size)'), fm(z.v), z.n, z.b, z.sl, r2(z.p), sig(z)]; }));
-  html += '</div><div class="card"><h3>📦 Top products</h3>';
-  html += T(['Product','Revenue','Orders','Buyers','Sellers','Avg qty','Median ₹','Signal'], P.map(function(x){ return [esc(x.p.slice(0, 80)), fm(x.v), x.n, x.b, x.sl, L(x.aq), r2(x.m), sig(x)]; }));
-  html += '</div>';
-  return html;
-}
-
-function vGeo(){
-  var G = geoList(F);
-  var localWin = null;
-  var al = F.filter(function(r){ return r.ss && r.ss !== 'Unknown'; });
-  if (al.length){ var w = 0; for (var i = 0; i < al.length; i++) if (al[i].ss === al[i].bs) w++; localWin = w / al.length; }
-  var html = '<div class="card"><h3>🗺️ State opportunity</h3>';
-  html += '<div class="mu">Entry score = market size (50) + room beyond leader (30) + buyer count (20).';
-  if (localWin != null) html += ' Local sellers win <b>' + pc(localWin) + '</b> of orders.';
-  html += '</div>';
-  html += T(['State','Entry score','Market ₹','Orders','Buyers','Sellers','Leader share','Local wins','Median ₹','Avg order ₹'], G.map(function(g){ return [esc(g.s), '<b>' + g.ease + '</b>', fm(g.v), g.n, g.b, g.sl, pc(g.t1), pc(g.loc), r2(g.p50), L(g.avg)]; }));
-  html += '</div>';
-  return html;
-}
-
-function vComp(){
-  var S = sellersList(F).slice(0, 40);
-  var html = '<div class="card"><h3>🥊 Competitor scorecard</h3>';
-  html += '<div class="mu">Price idx: 100 = market median. Trend: last 90d vs prior 90d. Bid/Direct from PDF filenames.</div>';
-  html += T(['Seller','Home state','Main type','Orders','Revenue','Share','Buyers','States','Avg qty','Price idx','Trend','Bid/Direct'],
-    S.map(function(s){
-      var isMe = ME && s.k === ME;
-      return [(isMe ? '⭐ ' : '') + esc(s.name.slice(0, 40)), esc(s.home || '—'), esc(s.cat), s.orders, fm(s.v), pc(s.share), s.buyers, s.states, L(s.aq), s.pidx ? s.pidx.toFixed(0) : '—', '<span class="' + (s.trend >= 0 ? 'pos' : 'neg') + '">' + (s.trend >= 0 ? '▲' : '▼') + ' ' + Math.abs(s.trend * 100).toFixed(0) + '%</span>', s.bid + ' / ' + s.dir];
-    }));
-  html += '</div>';
-  return html;
-}
-
-function vQty(){
-  var t = sum(F, 'total');
-  var a = [0,0,0,0,0,0,0,0,0,0,0,0];
-  var n = [0,0,0,0,0,0,0,0,0,0,0,0];
-  F.forEach(function(r){ var i = +r.date.slice(5,7) - 1; a[i] += r.total; n[i]++; });
-  var mx = Math.max.apply(null, a) || 1;
-  var bs = BANDS.map(function(b){
-    var l = F.filter(function(r){ return r.qty >= b[0] && r.qty <= b[1]; });
-    return [bandLabel(b), l.length, pc(F.length ? l.length / F.length : 0), fm(sum(l,'total')), pc(t ? sum(l,'total') / t : 0), l.length ? fm(sum(l,'total') / l.length) : '—', l.length ? r2(med(l)) : '—'];
-  });
-  var R = buyersList(F).filter(function(b){ return b.due != null && b.due <= 30 && b.orders > 1; }).sort(function(x,y){ return x.due - y.due; }).slice(0, 25);
-  var html = '<div class="card"><h3>📊 Order size mix</h3>';
-  html += T(['Qty band','Orders','% orders','Revenue','% revenue','Avg order ₹','Median unit ₹'], bs);
-  html += '</div><div class="card"><h3>📅 Seasonality</h3><div class="hb">';
-  for (var i = 0; i < 12; i++){
-    var alpha = 0.08 + (a[i] / mx) * 0.85;
-    html += '<div style="background:rgba(26,77,143,' + alpha + ');color:' + (a[i]/mx > 0.5 ? '#fff' : 'inherit') + '">' + MN[i] + '<br>' + fm(a[i]).replace('\u20B9','') + '<br>' + n[i] + '</div>';
-  }
-  html += '</div></div>';
-  html += '<div class="card"><h3>🔔 Reorder clock (next 30 days &amp; overdue)</h3>';
-  if (R.length){
-    html += T(['Status','Buyer','State','Cycle','Last order','Avg qty','Avg order ₹','Contact'],
-      R.map(function(b){
-        var st = b.due < 0 ? pill(-b.due + 'd overdue', 'r') : b.due <= 7 ? pill('in ' + b.due + 'd', 'a') : pill('in ' + b.due + 'd', 'g');
-        return [st, esc(b.name.slice(0, 40)), esc(b.state), b.cyc + 'd', b.last, L(b.aq), L(b.avg), esc(b.phone || '—')];
-      }));
-  } else html += '<div class="mu">None due.</div>';
-  html += '</div>';
-  return html;
-}
-
-function vDelta(){
-  var D = deltas(F);
-  var nameBuyer = D.names(function(r){ return r.bg || r.bd; });
-  var nameSeller = D.names(sk);
-  var nameState = D.names(function(r){ return r.bs; });
-  var nameSize = D.names(function(r){ return r.size; });
-  function tbl(list, nameMap){
-    return T(['Item','Last 30d','Prev 30d','Δ','Trend'],
-      list.slice(0, 25).map(function(x){
-        var nm = x.k.length > 36 ? x.k.slice(0, 36) : x.k;
-        var rec = nameMap.get(x.k);
-        var display = rec ? (rec.bd || rec.seller || rec.bs || rec.size || nm) : nm;
-        var cls = x.delta > 0.03 ? 'pos' : x.delta < -0.03 ? 'neg' : '';
-        var trend = x.delta > 0.05 ? '▲ growing' : x.delta < -0.05 ? '▼ declining' : '→ stable';
-        return [esc(String(display).slice(0, 40)), fm(x.now), fm(x.prev), '<span class="' + cls + '">' + (x.delta > 0 ? '+' : '') + (x.delta * 100).toFixed(1) + '%</span>', '<span class="' + cls + '">' + trend + '</span>'];
-      }));
-  }
-  var pT = D.totals, Dpct = pT.prev ? ((pT.cur - pT.prev) / pT.prev * 100) : 0;
-  var alerts = watchlist(F);
-  var alertsHtml = alerts.length ? alerts.map(function(a){ return '<div class="alert ' + a.t + '">' + a.m + '</div>'; }).join('') : '<div class="mu">No alerts.</div>';
-  var html = '<div class="card"><h3>🔥 What changed — last 30 days vs previous 30 days</h3>';
-  html += '<div class="mu">Uses full master (ignores From/To filter).</div>';
-  html += '<div class="kpis" style="margin-top:12px">';
-  html += '<div class="kpi"><b>' + fm(pT.cur) + '</b><span>Last 30d value</span></div>';
-  html += '<div class="kpi"><b>' + fm(pT.prev) + '</b><span>Prev 30d value</span></div>';
-  html += '<div class="kpi"><b class="' + (Dpct >= 0 ? 'pos' : 'neg') + '">' + (Dpct > 0 ? '+' : '') + Dpct.toFixed(1) + '%</b><span>Value change</span></div>';
-  html += '<div class="kpi"><b>' + pT.orders + '</b><span>Last 30d orders</span></div>';
-  html += '<div class="kpi"><b>' + pT.ordersPrev + '</b><span>Prev 30d orders</span></div>';
-  html += '<div class="kpi"><b class="' + (D.price.delta >= 0 ? 'pos' : 'neg') + '">' + (D.price.delta > 0 ? '+' : '') + (D.price.delta * 100).toFixed(1) + '%</b><span>Median price change</span></div>';
-  html += '</div></div>';
-  html += '<div class="card"><h3>🔔 Watchlist alerts</h3>' + alertsHtml + '</div>';
-  html += '<div class="grid">';
-  html += '<div class="card"><h3>Buyers — biggest movers</h3>' + tbl(D.buyer, nameBuyer) + '</div>';
-  html += '<div class="card"><h3>Sellers — biggest movers</h3>' + tbl(D.seller, nameSeller) + '</div>';
-  html += '<div class="card"><h3>Sizes — biggest movers</h3>' + tbl(D.size, nameSize) + '</div>';
-  html += '<div class="card"><h3>States — biggest movers</h3>' + tbl(D.state, nameState) + '</div>';
-  html += '<div class="card"><h3>Categories — movers</h3>' + tbl(D.cat, new Map()) + '</div>';
-  html += '</div>';
-  return html;
-}
-
-function vAnalyst(){
-  var R = mxRows(F);
-
-  function opts(dim, values){
-    var o = '<option value="">All</option>';
-    values.slice(0, 500).forEach(function(v){
-      o += '<option value="' + esc(v) + '"' + (MX[dim] === v ? ' selected' : '') + '>' + esc(String(v).slice(0, 60)) + '</option>';
-    });
-    return o;
-  }
-  function uniqueSorted(keyFn){
-    var set = new Set();
-    for (var i = 0; i < F.length; i++){
-      var v = keyFn(F[i]);
-      if (v && v !== 'Unknown' && v !== '(no size)') set.add(v);
+    for(var k in MX){
+      if(!MX[k])continue;
+      if(k==='state'&&r.bs!==MX[k])return false;
+      if(k==='cat'&&r.cat!==MX[k])return false;
+      if(k==='size'&&r.size!==MX[k])return false;
+      if(k==='seller'&&sk(r)!==MX[k])return false;
+      if(k==='buyer'&&(r.bg||r.bd)!==MX[k])return false;
+      if(k==='product'&&r.prod!==MX[k])return false;
+      if(k==='designation'&&r.bd!==MX[k])return false;
+      if(k==='brand'&&r.brand!==MX[k])return false;
+      if(k==='src'&&r.src!==MX[k])return false;
+      if(k==='seg'&&r.seg!==MX[k])return false;
     }
-    var arr = Array.from(set);
-    arr.sort();
-    return arr;
-  }
-
-  var states = uniqueSorted(function(r){ return r.bs; });
-  var cats = uniqueSorted(function(r){ return r.cat; });
-  var sizes = uniqueSorted(function(r){ return r.size; });
-  var sellerK = uniqueSorted(function(r){ return sk(r); });
-  var buyersK = uniqueSorted(function(r){ return r.bg || r.bd; });
-  var products = uniqueSorted(function(r){ return r.prod; });
-  var desigs = uniqueSorted(function(r){ return r.bd; });
-  var brands = uniqueSorted(function(r){ return r.brand; });
-  var srcs = ['Bid','Direct','Unknown'];
-
-  var bar = '<div class="card">';
-  bar += '<h3>🔬 Master Analyst — drill into any slice</h3>';
-  bar += '<div class="mu">Combine any filters — everything recomputes live. Filters stack with AND.</div>';
-  bar += '<div class="bar" style="margin-top:10px">';
-  bar += '<label>State <select onchange="mxSet(\'state\',this.value)">' + opts('state', states) + '</select></label>';
-  bar += '<label>Type <select onchange="mxSet(\'cat\',this.value)">' + opts('cat', cats) + '</select></label>';
-  bar += '<label>Size <select onchange="mxSet(\'size\',this.value)">' + opts('size', sizes) + '</select></label>';
-  bar += '<label>Brand <select onchange="mxSet(\'brand\',this.value)">' + opts('brand', brands) + '</select></label>';
-  bar += '<label>Seller <select onchange="mxSet(\'seller\',this.value)">' + opts('seller', sellerK) + '</select></label>';
-  bar += '<label>Buyer <select onchange="mxSet(\'buyer\',this.value)">' + opts('buyer', buyersK) + '</select></label>';
-  bar += '<label>Designation <select onchange="mxSet(\'designation\',this.value)">' + opts('designation', desigs) + '</select></label>';
-  bar += '<label>Product <select onchange="mxSet(\'product\',this.value)">' + opts('product', products) + '</select></label>';
-  bar += '<label>Source <select onchange="mxSet(\'src\',this.value)">' + opts('src', srcs) + '</select></label>';
-  bar += '<button class="s" onclick="mxReset()">✕ Clear all (' + mxActiveCount() + ')</button>';
-  bar += '<button class="s" onclick="mxExportCSV()">⬇ Export this slice</button>';
-  bar += '</div></div>';
-
-  if (!R.length){
-    return bar + '<div class="card mu">No records match this combination. Try clearing a filter.</div>';
-  }
-
-  var tot = sum(R,'total'), n = R.length;
-  var nBuyers = new Set(R.map(function(r){ return r.bg || r.bd; })).size;
-  var nSellers = new Set(R.map(function(r){ return sk(r); })).size;
-  var nStates = new Set(R.map(function(r){ return r.bs; }).filter(function(s){ return s !== 'Unknown'; })).size;
-  var nProducts = new Set(R.map(function(r){ return r.prod; })).size;
-  var medP = ps(R).p50;
-
-  var kpis = '<div class="card"><div class="kpis">';
-  kpis += '<div class="kpi"><b>' + fm(tot) + '</b><span>Slice value</span></div>';
-  kpis += '<div class="kpi"><b>' + n + '</b><span>Orders</span></div>';
-  kpis += '<div class="kpi"><b>' + fm(tot/n) + '</b><span>Avg order</span></div>';
-  kpis += '<div class="kpi"><b>' + r2(medP) + '</b><span>Median unit ₹</span></div>';
-  kpis += '<div class="kpi"><b>' + nBuyers + '</b><span>Buyers</span></div>';
-  kpis += '<div class="kpi"><b>' + nSellers + '</b><span>Sellers</span></div>';
-  kpis += '<div class="kpi"><b>' + nStates + '</b><span>States</span></div>';
-  kpis += '<div class="kpi"><b>' + nProducts + '</b><span>Products</span></div>';
-  kpis += '</div></div>';
-
-  function breakdown(field, keyFn, label){
-    var m = grp(R, keyFn);
-    var rows = [];
-    m.forEach(function(l, k){
-      var v = sum(l,'total');
-      var buyers = new Set(), sellers = new Set(), states = new Set();
-      for (var i = 0; i < l.length; i++){
-        if (l[i].bg) buyers.add(l[i].bg);
-        sellers.add(sk(l[i]));
-        if (l[i].bs && l[i].bs !== 'Unknown') states.add(l[i].bs);
-      }
-      rows.push({ k: k, v: v, n: l.length, buyers: buyers.size, sellers: sellers.size, states: states.size, avg: v/l.length, p50: med(l), share: tot ? v/tot : 0 });
-    });
-    rows.sort(function(a,b){ return b.v - a.v; });
-    return '<div class="card"><h3>' + label + ' <span class="mu">(' + rows.length + ')</span></h3>' +
-      T(['Name','Revenue','Share','Orders','Buyers','Sellers','States','Avg order ₹','Median unit ₹'],
-        rows.slice(0, 50).map(function(x){
-          return [
-            '<b>' + esc(String(x.k).slice(0, 50)) + '</b>',
-            fm(x.v), pc(x.share), x.n, x.buyers, x.sellers, x.states, L(x.avg), r2(x.p50)
-          ];
-        })) + '</div>';
-  }
-
-  var html = bar + kpis;
-
-  if (mxActiveCount()){
-    var parts = [];
-    Object.keys(MX).forEach(function(k){
-      if (MX[k]){
-        var nm = MX[k];
-        if (k === 'seller' || k === 'buyer'){
-          var rec = null;
-          for (var i = 0; i < F.length; i++){
-            if (k === 'seller' && sk(F[i]) === MX[k]){ rec = F[i].seller; break; }
-            if (k === 'buyer' && (F[i].bg || F[i].bd) === MX[k]){ rec = F[i].bd || F[i].bg; break; }
-          }
-          nm = (rec || MX[k]).slice(0, 50);
-        }
-        parts.push('<b>' + k + ':</b> ' + esc(String(nm).slice(0,60)));
-      }
-    });
-    html += '<div class="card"><div class="mu">Active filters → ' + parts.join(' · ') + '</div></div>';
-  }
-
-  html += '<div class="grid">';
-  html += breakdown('state', function(r){ return r.bs !== 'Unknown' ? r.bs : null; }, '🗺️ States in this slice');
-  html += breakdown('buyer', function(r){ return r.bg || r.bd; }, '👥 Top buyers in this slice');
-  html += breakdown('seller', function(r){ return sk(r); }, '🥊 Top sellers (competitors)');
-  html += breakdown('cat', function(r){ return r.cat; }, '🏷️ Label types');
-  html += breakdown('size', function(r){ return r.size; }, '📐 Hot sizes');
-  html += breakdown('brand', function(r){ return r.brand; }, '🏭 Brands');
-  html += breakdown('prod', function(r){ return r.prod; }, '📦 Top products');
-  html += breakdown('designation', function(r){ return r.bd; }, '👔 Buyer designations');
-  html += '</div>';
-
-  var mo = new Map();
-  R.forEach(function(r){ var k = r.date.slice(0,7); mo.set(k, (mo.get(k)||0) + r.total); });
-
-  html += '<div class="card"><h3>📅 Monthly trend for this slice</h3>';
-  html += '<div class="ch"><canvas id="mxc1"></canvas></div></div>';
-
-  var srcCounts = { Bid: 0, Direct: 0, Unknown: 0 };
-  R.forEach(function(r){ srcCounts[r.src] = (srcCounts[r.src]||0) + r.total; });
-  html += '<div class="card"><h3>🔨 Bid vs Direct</h3>';
-  html += T(['Source','Revenue','Orders'],
-    Object.keys(srcCounts).map(function(k){
-      var cnt = R.filter(function(r){ return r.src === k; }).length;
-      return [k === 'Bid' ? '🔨 Bid-won' : k === 'Direct' ? '📦 Direct order' : '❓ Unknown', fm(srcCounts[k]), cnt];
-    }));
-  html += '</div>';
-
-  var sample = R.slice().sort(function(a,b){ return b.total - a.total; }).slice(0, 100);
-  html += '<div class="card"><h3>📋 Sample of this slice (top 100 by value)</h3>';
-  html += T(['Date','Buyer','State','Seller','Type','Size','Brand','Product','Qty','Unit ₹','Total ₹'],
-    sample.map(function(r){
-      return [r.date, esc((r.bd || r.bg).slice(0, 30)), esc(r.bs), esc(r.seller.slice(0, 30)), esc(r.cat), esc(r.size), esc(r.brand), esc(r.prod.slice(0, 50)), L(r.qty), r.unit, L(r.total)];
-    }));
-  html += '</div>';
-
-  return html;
+    return true
+  })
 }
+function mxActiveCount(){var n=0;for(var k in MX)if(MX[k])n++;return n}
 
-function dAnalyst(){
-  var R = mxRows(F);
-  var mo = new Map();
-  R.forEach(function(r){ var k = r.date.slice(0,7); mo.set(k, (mo.get(k)||0) + r.total); });
-  var ks = Array.from(mo.keys()).sort();
-  mk('mxc1', {
-    type: 'line',
-    data: { labels: ks, datasets: [{ data: ks.map(function(k){ return mo.get(k); }), borderColor: '#1a4d8f', backgroundColor: '#1a4d8f33', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+/* =========================================================
+   TAB 1 — NEW SELLER COMMAND CENTRE
+   ========================================================= */
+function vCmd(){
+  var tot=sum(F,'total'),n=F.length;
+  var B=buyersList(F),S=sellersList(F);
+  var dq=dqReport(F);
+  var P=ps(F);
+  var segs=segList(F);
+  var topSeg=segs[0];
+
+  // Ranked opportunities
+  var opps=B.slice(0,30).map(function(b){
+    var sc=scoreBuyer(b);
+    var action = sc>=75 ? 'Call today'
+               : sc>=55 ? 'Contact this week'
+               : sc>=35 ? 'Watch'
+               : 'Low priority';
+    var reasons=[];
+    if(b.dsl<=30)reasons.push('recent');
+    if(b.orders>=3)reasons.push(b.orders+' orders');
+    if(b.val>=50000)reasons.push('₹'+Math.round(b.val/1000)+'k');
+    if(b.conf==='HIGH')reasons.push('multi-date');
+    if(b.sel.length<=2)reasons.push('few sellers');
+    return{ b:b, score:sc, action:action, why:reasons.join(' · ')||'—' }
+  }).sort(function(a,b){return b.score-a.score});
+
+  var html='';
+
+  // Hero KPIs
+  html+='<div class="hero">';
+  html+='<h2>🎯 Command Centre — what to do next</h2>';
+  html+='<div class="kpis">';
+  html+='<div class="kpi"><b>'+fm(tot)+'</b><span>Recorded transaction value</span><small>sum of "Price (Incl. All Duties)" for all filtered rows</small></div>';
+  html+='<div class="kpi"><b>'+n.toLocaleString('en-IN')+'</b><span>Transaction records</span><small>distinct rows after dedupe</small></div>';
+  html+='<div class="kpi"><b>'+B.length+'</b><span>Unique buyers (GSTIN or name)</span></div>';
+  html+='<div class="kpi"><b>'+S.length+'</b><span>Unique sellers</span></div>';
+  html+='<div class="kpi"><b>'+r2(P.p50)+'</b><span>Median unit price</span><small>excludes rows with unit≤0</small></div>';
+  html+='<div class="kpi"><b>'+opps.filter(function(o){return o.score>=75}).length+'</b><span>Priority buyers (score ≥75)</span></div>';
+  html+='</div>';
+  if(topSeg)html+='<div style="margin-top:12px;font-size:13.5px">Largest segment in this data: <b>'+esc(topSeg.s)+'</b> · '+fm(topSeg.v)+' · '+topSeg.n+' orders · '+topSeg.b+' buyers.</div>';
+  html+='</div>';
+
+  // Data quality summary
+  if(dq.issues.some(function(x){return x[1]>0&&x[2]==='r'})){
+    html+='<div class="warn"><b>⚠️ Data quality:</b> Some rows have invalid data. ';
+    html+='<a href="javascript:TAB=\'dq\';show()" style="color:var(--pr);font-weight:600">See full report →</a></div>';
+  }
+
+  // Ranked opportunities table
+  html+='<h2>📞 Priority buyers — ranked by opportunity score</h2>';
+  html+='<div class="mu" style="margin-bottom:8px">Score combines recency, frequency, historical value, competition, and data confidence. Adjust weights below.</div>';
+
+  // Weight sliders
+  html+='<div class="card"><h3>⚖️ Adjust scoring weights</h3>';
+  ['rec','freq','val','fit','comp','conf'].forEach(function(k){
+    var lbl={rec:'Recency',freq:'Frequency',val:'Value',fit:'Product fit*',comp:'Fewer sellers',conf:'Data confidence'}[k];
+    html+='<div class="slider"><span style="width:120px">'+lbl+'</span><input type="range" min="0" max="40" value="'+W[k]+'" oninput="W.'+k+'=+this.value;document.getElementById(\'wv_'+k+'\').textContent=this.value;if(window._wto)clearTimeout(window._wto);window._wto=setTimeout(show,250)"><span class="val" id="wv_'+k+'">'+W[k]+'</span></div>';
   });
+  html+='<div class="mu">*Product fit currently set to neutral (70) — plug in your catalog later.</div>';
+  html+='</div>';
+
+  // Opportunity table
+  var rows=opps.slice(0,50).map(function(o){
+    var b=o.b;
+    var actionPill=o.score>=75?pill('CALL TODAY','r'):o.score>=55?pill('THIS WEEK','a'):o.score>=35?pill('WATCH',''):pill('LOW','');
+    var dueStr=b.due==null?'—':b.due<0?(-b.due)+'d overdue':'in '+b.due+'d';
+    var priceIdxStr=b.pidx?b.pidx.toFixed(0):'—';
+    return[
+      '<b>'+o.score+'</b>',
+      actionPill,
+      '<a href="javascript:drill(\'buyer\','+"'"+b.k.replace(/'/g,"\\'")+"'"+')" style="color:var(--pr);font-weight:600;text-decoration:none">'+esc(b.name.slice(0,32))+'</a>',
+      esc(b.state),
+      pill(b.conf,b.conf==='HIGH'?'g':b.conf==='MED'?'a':'r'),
+      b.orders, L(b.val), L(b.avg),
+      b.cyc?b.cyc+'d':'—',
+      dueStr, priceIdxStr,
+      esc(b.seg.slice(0,18)),
+      '<span class="mu">'+esc(o.why)+'</span>',
+      b.phone?('<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>'):'—'
+    ]
+  });
+  html+='<div class="card">'+T(['Score','Action','Buyer','State','Confidence','Orders','Total ₹','Avg ₹','Cycle','Next due','Price idx','Segment','Why it ranks','Phone'],rows)+'</div>';
+  html+='<button class="s" onclick="csvOpps()">⬇ Export opportunity list CSV</button>';
+
+  // 3 next-step cards
+  html+='<h2>⚡ What to do today</h2>';
+  html+='<div class="grid">';
+  html+='<div class="clickable card"><h3>1. Call top-ranked buyers</h3><div>'+opps.filter(function(o){return o.score>=75}).length+' buyers score ≥75. Start with the first 5 — they have recent activity, repeat purchases, or few competing sellers.</div></div>';
+  html+='<div class="clickable card"><h3>2. Check the price ladder</h3><div>Median unit price is <b>'+r2(P.p50)+'</b>. Verify this for your exact SKU before quoting. <a href="javascript:TAB=\'comp\';show()" style="color:var(--pr)">Open Competitors →</a></div></div>';
+  html+='<div class="clickable card"><h3>3. Pick a product category</h3><div>The largest category here is <b>'+esc((catsList(F)[0]||{}).c||'—')+'</b>. Check sizes and buyers before committing stock. <a href="javascript:TAB=\'map\';show()" style="color:var(--pr)">Open Market Map →</a></div></div>';
+  html+='</div>';
+
+  return html
 }
 
-function mxSet(dim, val){
-  MX[dim] = val || '';
-  show();
+function csvOpps(){
+  function q(v){return'"'+String(v==null?'':v).replace(/"/g,'""')+'"'}
+  var B=buyersList(F);
+  var rows=[['Score','Action','Buyer','GSTIN','State','Segment','Confidence','Orders','Total','AvgOrder','Cycle','DueDays','PriceIdx','Sellers','Phone','Why']];
+  B.slice(0,200).forEach(function(b){
+    var sc=scoreBuyer(b);
+    var action=sc>=75?'Call today':sc>=55?'This week':sc>=35?'Watch':'Low';
+    var reasons=[];
+    if(b.dsl<=30)reasons.push('recent');
+    if(b.orders>=3)reasons.push(b.orders+' orders');
+    if(b.val>=50000)reasons.push('₹'+Math.round(b.val/1000)+'k');
+    if(b.conf==='HIGH')reasons.push('multi-date');
+    if(b.sel.length<=2)reasons.push('few sellers');
+    rows.push([sc,action,b.name,b.k,b.state,b.seg,b.conf,b.orders,Math.round(b.val),Math.round(b.avg),b.cyc,b.due,Math.round(b.pidx),b.sel.length,b.phone,reasons.join('; ')]);
+  });
+  dl(rows.map(function(r){return r.map(q).join(',')}).join('\n'),'gem_opportunities.csv','text/csv')
 }
 
-function mxReset(){
-  Object.keys(MX).forEach(function(k){ MX[k] = ''; });
-  show();
+/* =========================================================
+   TAB 2 — MARKET MAP
+   ========================================================= */
+function vMap(){
+  var tot=sum(F,'total'),n=F.length,B=buyersList(F),S=sellersList(F);
+  var segs=segList(F),cats=catsList(F),geos=geoList(F),P=ps(F);
+  var mo=[0,0,0,0,0,0,0,0,0,0,0,0];
+  F.forEach(function(r){mo[+r.date.slice(5,7)-1]+=r.total});
+  var peakIdx=mo.indexOf(Math.max.apply(null,mo));
+  var q4=fiscalQ4(F);
+
+  var html='';
+  html+='<div class="hero"><h2>📍 Market Map — where demand lives</h2>';
+  html+='<div class="kpis">';
+  html+='<div class="kpi"><b>'+fm(tot)+'</b><span>Total value</span></div>';
+  html+='<div class="kpi"><b>'+n.toLocaleString('en-IN')+'</b><span>Orders</span></div>';
+  html+='<div class="kpi"><b>'+B.length+'</b><span>Buyers</span></div>';
+  html+='<div class="kpi"><b>'+S.length+'</b><span>Sellers</span></div>';
+  html+='<div class="kpi"><b>'+MN[peakIdx]+'</b><span>Peak month</span></div>';
+  html+='<div class="kpi"><b>'+pc(q4)+'</b><span>Jan–Mar share</span></div>';
+  html+='</div></div>';
+
+  html+='<h2>🏢 Segments — click any</h2>';
+  html+='<div class="grid">';
+  segs.forEach(function(s){
+    html+='<div class="seg-card clickable card" onclick="drill(\'seg\','+"'"+s.s.replace(/'/g,"\\'")+"'"+')">';
+    html+='<h4>'+esc(s.s)+'</h4>';
+    html+='<div class="val">'+fm(s.v)+'</div>';
+    html+='<div class="sub">'+s.n+' orders · '+s.b+' buyers · '+s.sl+' sellers</div>';
+    if(s.topState)html+='<div class="sub">📍 '+esc(s.topState)+' · 🏷️ '+esc(s.topCat||'—')+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  html+='<h2>🗺️ States — click any</h2>';
+  html+='<div class="card"><div class="grid"><div><h3>Value by state</h3><div class="ch"><canvas id="c1"></canvas></div></div>';
+  html+='<div><h3>Entry score (click row)</h3>';
+  html+=T(['#','State','Entry','Market ₹','Buyers','Sellers'],
+    geos.slice(0,15).map(function(g,i){
+      return['<span class="rank">'+(i+1)+'</span>',
+        '<a href="javascript:drill(\'state\','+"'"+g.s.replace(/'/g,"\\'")+"'"+')" style="color:var(--pr);font-weight:600;text-decoration:none">'+esc(g.s)+'</a>',
+        '<b>'+g.ease+'</b>',fm(g.v),g.b,g.sl]
+    }));
+  html+='</div></div></div>';
+
+  html+='<h2>🏷️ Categories — click any</h2>';
+  html+='<div class="grid-4">';
+  cats.forEach(function(c){
+    html+='<div class="seg-card clickable card" onclick="drill(\'cat\','+"'"+c.c.replace(/'/g,"\\'")+"'"+')" style="padding:10px">';
+    html+='<h4 style="font-size:13px">'+esc(c.c)+'</h4>';
+    html+='<div class="val" style="font-size:17px">'+fm(c.v)+'</div>';
+    html+='<div class="sub">'+c.n+' orders · median '+r2(c.p50)+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  html+='<h2>📅 Monthly pattern</h2>';
+  html+='<div class="card"><div class="ch"><canvas id="c2"></canvas></div>';
+  html+='<div class="mu">Descriptive view — not a forecast. Data covers only the months present in the file.</div></div>';
+
+  return html
+}
+
+function dMap(){
+  var geos=geoList(F).slice(0,12);
+  mk('c1',{type:'bar',data:{labels:geos.map(function(g){return g.s}),datasets:[{data:geos.map(function(g){return g.v}),backgroundColor:'#1a4d8f',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  var mo=new Map();
+  F.forEach(function(r){var k=r.date.slice(0,7);mo.set(k,(mo.get(k)||0)+r.total)});
+  var ks=Array.from(mo.keys()).sort();
+  mk('c2',{type:'line',data:{labels:ks,datasets:[{data:ks.map(function(k){return mo.get(k)}),borderColor:'#1a4d8f',backgroundColor:'#1a4d8f33',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+}
+
+/* =========================================================
+   TAB 3 — TARGET BUYERS
+   ========================================================= */
+function vBuyers(){
+  var B=buyersList(F);
+  var f=window.bf||'all';
+  function hasTag(t){return function(b){return b.tags.some(function(x){return x[0]===t})}}
+  var filters={all:function(){return true},due:hasTag('REORDER WINDOW'),over:hasTag('PAID 15%+ ABOVE MED'),big:hasTag('TOP DECILE SPEND'),loyal:hasTag('REPEAT'),fresh:hasTag('SINGLE PURCHASE')};
+  var labels={all:'All',due:'⏰ Reorder window',over:'💰 Paid above median',big:'💎 Top decile',loyal:'🔄 Repeat',fresh:'🆕 Single'};
+
+  var html='';
+  html+='<div class="hero"><h2>📞 Target Buyers</h2>';
+  html+='<div style="font-size:13.5px;line-height:1.6">Ranked by <b>historical</b> activity. Reorder windows are <b>estimates</b> with confidence levels — not confirmed procurement.</div></div>';
+
+  html+='<div class="card"><div class="bar">';
+  Object.keys(labels).forEach(function(x){
+    html+='<button class="'+((f===x)?'':'s')+'" onclick="window.bf=\''+x+'\';show()">'+labels[x]+'</button>';
+  });
+  html+='<button class="s" onclick="csvOpps()">⬇ CSV</button></div></div>';
+
+  var rows=B.filter(filters[f]).slice(0,120).map(function(b){
+    var status=b.due==null?'—':b.due<0?'<span class="neg">'+(-b.due)+'d ago</span>':'in '+b.due+'d';
+    var confPill=pill(b.conf,b.conf==='HIGH'?'g':b.conf==='MED'?'a':'r');
+    return[
+      '<b>'+scoreBuyer(b)+'</b>',
+      '<a href="javascript:drill(\'buyer\','+"'"+b.k.replace(/'/g,"\\'")+"'"+')" style="color:var(--pr);font-weight:600;text-decoration:none">'+esc(b.name.slice(0,32))+'</a>',
+      esc(b.state),confPill,
+      b.orders,L(b.val),L(b.avg),b.cyc?b.cyc+'d':'—',status,
+      b.dates, // number of distinct purchase dates — evidence for reorder
+      b.pidx?b.pidx.toFixed(0):'—',
+      esc(b.seg.slice(0,18)),
+      b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':'—'
+    ]
+  });
+  html+='<div class="card">'+T(['Score','Buyer','State','Conf','Orders','Total ₹','Avg ₹','Cycle','Next due est.','Distinct dates','Price idx','Segment','Phone'],rows)+'</div>';
+  html+='<div class="mu">"Next due est." requires ≥3 distinct purchase dates. Below that, cycle is unknown.</div>';
+
+  return html
+}
+
+/* =========================================================
+   TAB 4 — COMPETITORS & PRICE
+   ========================================================= */
+function vComp(){
+  var S=sellersList(F).slice(0,30),P=ps(F);
+  var top3=S.slice(0,3).reduce(function(a,s){return a+s.share},0);
+
+  var html='';
+  html+='<div class="hero"><h2>🥊 Competitors & Price</h2>';
+  html+='<div class="kpis">';
+  html+='<div class="kpi"><b>'+S.length+'</b><span>Active sellers</span></div>';
+  html+='<div class="kpi"><b>'+pc(top3)+'</b><span>Top 3 share</span></div>';
+  html+='<div class="kpi"><b>'+P.n+'</b><span>Valid priced rows</span><small>unit>0</small></div>';
+  html+='<div class="kpi"><b>'+r2(P.p50)+'</b><span>Median unit</span></div>';
+  html+='</div></div>';
+
+  html+='<h2>💰 Observed price distribution — for context only</h2>';
+  html+='<div class="info">These are prices buyers actually paid in your dataset. They describe the past, not your probability of winning. Your cost + margin decide your bid.</div>';
+  html+='<div class="card">'+T(['Percentile','Unit price','Meaning'],
+    [['P10','<b>'+r2(P.p10)+'</b>','10% of recorded unit prices were below this'],
+     ['P25','<b>'+r2(P.p25)+'</b>','Aggressive position'],
+     ['P50 · median','<b>'+r2(P.p50)+'</b>','Middle of observed values'],
+     ['P75','<b>'+r2(P.p75)+'</b>','Upper quartile'],
+     ['P90','<b>'+r2(P.p90)+'</b>','10% of recorded prices were above this']])+'</div>';
+
+  html+='<h2>📊 Competitor scorecard</h2>';
+  html+='<div class="card">'+T(['#','Seller','Home state','Segment','Orders','Revenue','Share','Buyers','Price idx','Trend'],
+    S.map(function(s,i){
+      var isMe=ME&&s.k===ME;
+      return['<span class="rank">'+(i+1)+'</span>',
+        '<a href="javascript:drill(\'seller\','+"'"+s.k.replace(/'/g,"\\'")+"'"+')" style="color:var(--pr);font-weight:600;text-decoration:none">'+(isMe?'⭐ ':'')+esc(s.name.slice(0,36))+'</a>',
+        esc(s.home||'—'),esc(s.seg.slice(0,20)),s.orders,fm(s.v),pc(s.share),s.buyers,
+        s.pidx?s.pidx.toFixed(0):'—',
+        '<span class="'+(s.trend>=0?'pos':'neg')+'">'+(s.trend>=0?'▲':'▼')+' '+Math.abs(s.trend*100).toFixed(0)+'%</span>']
+    }))+'</div>';
+
+  return html
+}
+
+/* =========================================================
+   TAB 5 — MASTER ANALYST
+   ========================================================= */
+function vAnalyst(){
+  var R=mxRows(F);
+
+  function uniq(fn){var s=new Set();for(var i=0;i<F.length;i++){var v=fn(F[i]);if(v&&v!=='Unknown'&&v!=='(no size)')s.add(v)}return Array.from(s).sort()}
+
+  function nameDropdown(dim,keyFn,nameLookup,label){
+    var counts=new Map();
+    for(var i=0;i<F.length;i++){var k=keyFn(F[i]);if(!k)continue;counts.set(k,(counts.get(k)||0)+1)}
+    var list=[];
+    counts.forEach(function(n,k){list.push({k:k,name:nameLookup(k),n:n})});
+    list.sort(function(a,b){return b.n-a.n});
+    var opts='<option value="">All</option>';
+    list.slice(0,300).forEach(function(x){
+      opts+='<option value="'+esc(x.k)+'"'+(MX[dim]===x.k?' selected':'')+'>'+esc(String(x.name).slice(0,48))+' ('+x.n+')</option>';
+    });
+    return '<label>'+label+' <select onchange="MX.'+dim+'=this.value;show()">'+opts+'</select></label>'
+  }
+  function opts(dim,values){
+    var o='<option value="">All</option>';
+    values.slice(0,400).forEach(function(v){
+      o+='<option value="'+esc(v)+'"'+(MX[dim]===v?' selected':'')+'>'+esc(String(v).slice(0,55))+'</option>'
+    });
+    return o
+  }
+
+  var bar='<div class="card">';
+  bar+='<h3>🔬 Master Analyst — drill into any slice</h3>';
+  bar+='<div class="mu">Names shown; filtering by GSTIN internally.</div>';
+  bar+='<div class="bar" style="margin-top:10px">';
+  bar+='<label>State <select onchange="MX.state=this.value;show()">'+opts('state',uniq(function(r){return r.bs}))+'</select></label>';
+  bar+='<label>Segment <select onchange="MX.seg=this.value;show()">'+opts('seg',SEGMENTS.map(function(s){return s[0]}))+'</select></label>';
+  bar+='<label>Type <select onchange="MX.cat=this.value;show()">'+opts('cat',uniq(function(r){return r.cat}))+'</select></label>';
+  bar+='<label>Size <select onchange="MX.size=this.value;show()">'+opts('size',uniq(function(r){return r.size}))+'</select></label>';
+  bar+='<label>Brand <select onchange="MX.brand=this.value;show()">'+opts('brand',uniq(function(r){return r.brand}))+'</select></label>';
+  bar+=nameDropdown('seller',sk,sellerName,'Seller');
+  bar+=nameDropdown('buyer',function(r){return r.bg||r.bd},buyerName,'Buyer');
+  bar+='<label>Source <select onchange="MX.src=this.value;show()">'+opts('src',['Bid','Direct','Unknown'])+'</select></label>';
+  bar+='<button class="s" onclick="mxClearAll()">✕ Clear ('+mxActiveCount()+')</button>';
+  bar+='<button class="s" onclick="mxExportCSV()">⬇ Export slice</button>';
+  bar+='</div>';
+
+  if(mxActiveCount()){
+    bar+='<div class="crumbs" style="margin-top:10px"><b class="mu">Active:</b>';
+    for(var k in MX){
+      if(!MX[k])continue;
+      var nm=MX[k];
+      if(k==='seller')nm=sellerName(MX[k]);
+      else if(k==='buyer')nm=buyerName(MX[k]);
+      bar+='<span class="crumb" onclick="mxClearOne(\''+k+'\')">'+k+': '+esc(String(nm).slice(0,40))+' <span class="x">✕</span></span>';
+    }
+    bar+='</div>';
+  }
+  bar+='</div>';
+
+  if(!R.length)return bar+'<div class="card empty">No records match this combination.</div>';
+
+  var tot=sum(R,'total'),n=R.length;
+  var nBuyers=new Set(R.map(function(r){return r.bg||r.bd})).size;
+  var nSellers=new Set(R.map(function(r){return sk(r)})).size;
+  var medP=ps(R).p50;
+
+  var kpis='<div class="card"><div class="kpis">';
+  kpis+='<div class="kpi"><b>'+fm(tot)+'</b><span>Slice value</span></div>';
+  kpis+='<div class="kpi"><b>'+n+'</b><span>Orders</span></div>';
+  kpis+='<div class="kpi"><b>'+fm(tot/n)+'</b><span>Avg order</span></div>';
+  kpis+='<div class="kpi"><b>'+r2(medP)+'</b><span>Median unit</span></div>';
+  kpis+='<div class="kpi"><b>'+nBuyers+'</b><span>Buyers</span></div>';
+  kpis+='<div class="kpi"><b>'+nSellers+'</b><span>Sellers</span></div>';
+  kpis+='</div></div>';
+
+  function breakdown(dim,keyFn,displayFn,label){
+    var m=grp(R,keyFn),rows=[];
+    m.forEach(function(l,k){
+      var v=sum(l,'total');
+      var buyers=new Set(),sellers=new Set(),states=new Set();
+      for(var i=0;i<l.length;i++){if(l[i].bg)buyers.add(l[i].bg);sellers.add(sk(l[i]));if(l[i].bs&&l[i].bs!=='Unknown')states.add(l[i].bs)}
+      var display=displayFn?displayFn(k):k;
+      rows.push({k:k,display:display,v:v,n:l.length,buyers:buyers.size,sellers:sellers.size,states:states.size,avg:v/l.length,p50:med(l),share:tot?v/tot:0});
+    });
+    rows.sort(function(a,b){return b.v-a.v});
+    var body=rows.slice(0,35).map(function(x){
+      var key=String(x.k).replace(/'/g,"\\'");
+      var link=dim?'<a href="javascript:MX.'+dim+'=\''+key+'\';show()" style="color:var(--pr);font-weight:600;text-decoration:none">'+esc(String(x.display).slice(0,50))+'</a>':'<b>'+esc(String(x.display).slice(0,50))+'</b>';
+      return[link,fm(x.v),pc(x.share),x.n,x.buyers,x.sellers,L(x.avg),r2(x.p50)]
+    });
+    return '<div class="card"><h3>'+label+' <span class="mu">('+rows.length+')</span></h3>'+
+      T(['Name'+((dim)?' — click to filter':''),'Revenue','Share','Orders','Buyers','Sellers','Avg ₹','Median ₹'],body)+
+      '</div>'
+  }
+
+  var html=bar+kpis;
+  html+='<div class="grid">';
+  html+=breakdown('state',function(r){return r.bs!=='Unknown'?r.bs:null},null,'🗺️ States');
+  html+=breakdown('seg',function(r){return r.seg},null,'🎯 Segments');
+  html+=breakdown('buyer',function(r){return r.bg||r.bd},buyerName,'👥 Buyers');
+  html+=breakdown('seller',function(r){return sk(r)},sellerName,'🥊 Sellers');
+  html+=breakdown('cat',function(r){return r.cat},null,'🏷️ Types');
+  html+=breakdown('size',function(r){return r.size},null,'📐 Sizes');
+  html+=breakdown('brand',function(r){return r.brand},null,'🏭 Brands');
+  html+='</div>';
+
+  var sample=R.slice().sort(function(a,b){return b.total-a.total}).slice(0,80);
+  html+='<div class="card"><h3>📋 Sample (top 80 by value)</h3>';
+  html+=T(['Date','Buyer','Segment','State','Seller','Type','Size','Product','Qty','Unit ₹','Total ₹'],
+    sample.map(function(r){return[r.date,esc((r.bd||r.bg).slice(0,26)),esc(r.seg.slice(0,18)),esc(r.bs),esc(r.seller.slice(0,24)),esc(r.cat),esc(r.size),esc(r.prod.slice(0,40)),L(r.qty),r.unit,L(r.total)]}));
+  html+='</div>';
+  return html
 }
 
 function mxExportCSV(){
-  var R = mxRows(F);
-  var rows = [['Date','Buyer','GSTIN','State','Seller','SellerGSTIN','Category','Size','Brand','Product','Qty','UnitPrice','Total','Source']];
-  R.forEach(function(r){
-    rows.push([r.date, r.bd, r.bg, r.bs, r.seller, r.sg, r.cat, r.size, r.brand, r.prod, r.qty, r.unit, r.total, r.src]);
-  });
-  function q(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
-  dl(rows.map(function(r){ return r.map(q).join(','); }).join('\n'), 'gem_slice_' + new Date().toISOString().slice(0,10) + '.csv', 'text/csv');
+  var R=mxRows(F);
+  var rows=[['Date','Buyer','BuyerGSTIN','Segment','State','Seller','SellerGSTIN','Category','Size','Brand','Product','Qty','UnitPrice','Total','Source']];
+  R.forEach(function(r){rows.push([r.date,r.bd,r.bg,r.seg,r.bs,r.seller,r.sg,r.cat,r.size,r.brand,r.prod,r.qty,r.unit,r.total,r.src])});
+  function q(v){return'"'+String(v==null?'':v).replace(/"/g,'""')+'"'}
+  dl(rows.map(function(r){return r.map(q).join(',')}).join('\n'),'gem_slice_'+new Date().toISOString().slice(0,10)+'.csv','text/csv')
 }
 
-function vGap(){
-  if (!ME){
-    return '<div class="card"><h3>🎯 Gap analysis needs a Seller selected</h3><div class="mu">Choose a specific seller from the top dropdown to see which label types, sizes, and buyers they\'re missing.</div><div class="mu" style="margin-top:10px">Currently viewing: <b>All sellers (market view)</b>.</div></div>';
-  }
-  var myRows = F.filter(mine);
-  var myCats = new Set(), mySizes = new Set(), myBuyers = new Set();
-  for (var i = 0; i < myRows.length; i++){
-    myCats.add(myRows[i].cat);
-    if (myRows[i].size) mySizes.add(myRows[i].size);
-    if (myRows[i].bg) myBuyers.add(myRows[i].bg);
-  }
-  var catGap = catsList(F).filter(function(c){ return !myCats.has(c.c); });
-  var sizeGap = [];
-  grp(F, function(r){ return r.size && !mySizes.has(r.size) ? r.size : null; }).forEach(function(l, s){
-    var bs = new Set();
-    for (var i = 0; i < l.length; i++) if (l[i].bg) bs.add(l[i].bg);
-    sizeGap.push({ size: s, orders: l.length, val: sum(l,'total'), buyers: bs.size, p50: med(l) });
-  });
-  sizeGap.sort(function(a,b){ return b.val - a.val; });
-  sizeGap = sizeGap.slice(0, 20);
-  var buyerGap = [];
-  grp(F, function(r){ return (myCats.has(r.cat) && r.bg && !myBuyers.has(r.bg)) ? r.bg : null; }).forEach(function(l, k){
-    var cats = [];
-    grp(l, function(r){ return r.cat; }).forEach(function(v, kk){ cats.push([kk, sum(v,'total')]); });
-    cats.sort(function(a,b){ return b[1] - a[1]; });
-    var sels = [];
-    grp(l, function(r){ return r.seller; }).forEach(function(v, kk){ sels.push([kk, v.length]); });
-    sels.sort(function(a,b){ return b[1] - a[1]; });
-    buyerGap.push({ k: k, name: l[0].bd, state: l[0].bs, phone: l[0].bp, orders: l.length, val: sum(l,'total'), cat: cats[0] ? cats[0][0] : '', currently: sels.slice(0, 3).map(function(x){ return x[0]; }), last: l.map(function(r){ return r.date; }).sort().pop() });
-  });
-  buyerGap.sort(function(a,b){ return b.val - a.val; });
-  buyerGap = buyerGap.slice(0, 40);
-  var tot = catGap.reduce(function(a,c){ return a + c.v; }, 0);
-  var buyerVal = buyerGap.reduce(function(a,b){ return a + b.val; }, 0);
-  var html = '<div class="card"><h3>🎯 Gap analysis — where you\'re leaving money on the table</h3>';
-  html += '<div class="mu">Comparing market (all rows) vs the selected seller\'s rows.</div>';
-  html += '<div class="kpis" style="margin-top:12px">';
-  html += '<div class="kpi"><b>' + fm(tot) + '</b><span>Value in category gaps</span></div>';
-  html += '<div class="kpi"><b>' + catGap.length + '</b><span>Types you don\'t sell</span></div>';
-  html += '<div class="kpi"><b>' + buyerGap.length + '</b><span>Buyers to target</span></div>';
-  html += '<div class="kpi"><b>' + fm(buyerVal) + '</b><span>Addressable ₹</span></div>';
-  html += '</div></div>';
-  html += '<div class="card"><h3>📦 Label types in market you don\'t sell</h3>';
-  html += catGap.length ? T(['Type','Market ₹','Orders','Buyers','Sellers','Median ₹'], catGap.map(function(c){ return [esc(c.c), fm(c.v), c.n, c.b, c.s, r2(c.p50)]; })) : '<div class="mu">You cover all categories. 🎉</div>';
-  html += '</div>';
-  html += '<div class="card"><h3>📐 Sizes you don\'t sell</h3>';
-  html += sizeGap.length ? T(['Size','Orders','Market ₹','Buyers','Median ₹'], sizeGap.map(function(s){ return [esc(s.size), s.orders, fm(s.val), s.buyers, r2(s.p50)]; })) : '<div class="mu">You cover all parsed sizes.</div>';
-  html += '</div>';
-  html += '<div class="card"><h3>👥 Buyers buying your categories — but NOT from you</h3>';
-  html += buyerGap.length ? T(['Buyer','State','Category','Orders','Market ₹','Currently buys from','Phone'], buyerGap.map(function(b){ return [esc(b.name.slice(0, 36)), esc(b.state), esc(b.cat), b.orders, fm(b.val), esc(b.currently.join(', ').slice(0, 50)), esc(b.phone || '—')]; })) : '<div class="mu">No buyers outside your list in these categories.</div>';
-  html += '</div>';
-  return html;
+/* =========================================================
+   TAB 6 — DATA QUALITY
+   ========================================================= */
+function vDQ(){
+  var dq=dqReport(F);
+  var html='';
+  html+='<div class="hero"><h2>🔍 Data Quality Report</h2>';
+  html+='<div class="kpis">';
+  html+='<div class="kpi"><b>'+dq.totalRows.toLocaleString('en-IN')+'</b><span>Rows in slice</span></div>';
+  html+='<div class="kpi"><b>'+fm(dq.recon)+'</b><span>Sum of "Price (Incl.)" column</span><small>should match source Excel pivot total</small></div>';
+  html+='<div class="kpi"><b>'+r2(dq.p50)+'</b><span>Median unit price (clean rows only)</span></div>';
+  html+='</div></div>';
+
+  html+='<h2>⚠️ Issues found</h2>';
+  html+='<div class="card">'+T(['Issue','Count','Severity'],
+    dq.issues.map(function(x){
+      var sev=x[2]==='r'?pill('Critical','r'):x[2]==='a'?pill('Warning','a'):pill('Info','g');
+      return[esc(x[0]),'<b>'+x[1]+'</b>',sev]
+    }))+'</div>';
+
+  html+='<h2>📖 KPI definitions used</h2>';
+  html+='<div class="card"><ul style="line-height:1.9;padding-left:18px">';
+  html+='<li><b>Recorded transaction value</b> = sum of "Price (Inclusive of All Duties & Taxes) - INR" for filtered rows where the value is present and >0.</li>';
+  html+='<li><b>Unit price</b> = "Unit Price" column, excluding rows where it is missing, zero, or negative.</li>';
+  html+='<li><b>Median unit price</b> = P50 of clean unit prices in the current slice.</li>';
+  html+='<li><b>Unique buyers</b> = distinct buyer GSTINs; if GSTIN missing, buyer name is used.</li>';
+  html+='<li><b>Unique sellers</b> = distinct seller GSTINs; if GSTIN missing, seller name is used.</li>';
+  html+='<li><b>Repeat buyer</b> = buyer with ≥2 distinct purchase dates in the slice.</li>';
+  html+='<li><b>Reorder cycle estimate</b> = average days between distinct purchase dates. Requires ≥3 distinct dates to be shown.</li>';
+  html+='<li><b>Opportunity score</b> = weighted blend of recency, frequency, historical value, product fit (neutral for now), competition (fewer sellers = higher), and data confidence. Weights are adjustable in Command Centre.</li>';
+  html+='</ul></div>';
+
+  html+='<h2>💾 Data storage warning</h2>';
+  html+='<div class="warn">Your master data is stored only in this browser\'s localStorage. <b>Back up regularly</b> using the "⬇ Backup JSON" button at the top — clearing the browser cache or switching devices will lose your data.</div>';
+
+  return html
 }
 
-function vReport(){
-  var tot = sum(F, 'total'), n = F.length;
-  var buyers = buyersList(F), sellers = sellersList(F);
-  var myRows = ME ? F.filter(mine) : [];
-  var myVal = sum(myRows, 'total'), myShare = tot ? myVal / tot : 0;
-  var top5B = buyers.slice(0, 5);
-  var topG = geoList(F).slice(0, 3);
-  var priceRec = ps(F);
-  var topS = sellers.slice(0, 3);
-  var dateRange = F.length ? F.map(function(r){ return r.date; }).sort()[0] + ' → ' + F.map(function(r){ return r.date; }).sort().pop() : '—';
-  var html = '<div class="card rpt-page">';
-  html += '<h3 style="color:#1a4d8f;font-size:20px;margin-bottom:14px">📈 GeM Market Report</h3>';
-  html += '<div class="mu" style="margin-bottom:16px">Period: ' + dateRange + ' · ' + n.toLocaleString('en-IN') + ' orders · ' + buyers.length + ' buyers · ' + sellers.length + ' sellers</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">';
-  html += '<div><div style="font-size:11px;color:#667">Market size</div><div style="font-size:20px;font-weight:700">' + fm(tot) + '</div></div>';
-  html += '<div><div style="font-size:11px;color:#667">Avg order</div><div style="font-size:20px;font-weight:700">' + fm(tot / (n || 1)) + '</div></div>';
-  html += '<div><div style="font-size:11px;color:#667">Median unit price</div><div style="font-size:20px;font-weight:700">' + r2(priceRec.p50) + '</div></div>';
-  if (ME) html += '<div><div style="font-size:11px;color:#667">Selected seller\'s share</div><div style="font-size:20px;font-weight:700">' + pc(myShare) + '</div></div>';
-  html += '</div>';
-  if (ME && sellers[0]){
-    html += '<h3>Selected seller position</h3><div class="mu">Held <b>' + fm(myVal) + '</b> (' + pc(myShare) + ') across ' + myRows.length + ' orders. Gap to top: <b>' + fm(sellers[0].v - myVal) + '</b>.</div><br>';
-  }
-  html += '<h3>Top 5 buyers to prioritise</h3>';
-  html += '<table style="font-size:12px;margin-bottom:16px"><tr><th style="background:#eef2f7">Buyer</th><th style="background:#eef2f7">Orders</th><th style="background:#eef2f7">Value</th><th style="background:#eef2f7">Next due</th><th style="background:#eef2f7">Action</th></tr>';
-  top5B.forEach(function(b){
-    var due = b.due == null ? '—' : b.due < 0 ? (-b.due) + 'd overdue' : 'in ' + b.due + 'd';
-    html += '<tr><td>' + esc(b.name.slice(0, 40)) + '</td><td>' + b.orders + '</td><td>' + fm(b.val) + '</td><td>' + due + '</td><td>' + b.tags[0][0] + '</td></tr>';
-  });
-  html += '</table>';
-  html += '<h3>Top 3 states to expand</h3>';
-  html += '<table style="font-size:12px;margin-bottom:16px"><tr><th style="background:#eef2f7">State</th><th style="background:#eef2f7">Market ₹</th><th style="background:#eef2f7">Entry score</th></tr>';
-  topG.forEach(function(g){ html += '<tr><td>' + esc(g.s) + '</td><td>' + fm(g.v) + '</td><td>' + g.ease + '</td></tr>'; });
-  html += '</table>';
-  html += '<h3>Actions this week</h3><ul style="line-height:1.8">';
-  var dueCount = buyers.filter(function(b){ return b.due != null && b.due <= 14 && b.orders > 1; }).length;
-  html += '<li>Call ' + dueCount + ' buyers due for reorder in next 14 days.</li>';
-  html += '<li>Bid at P40 (' + r2(priceRec.p40) + ') across top 5 SKUs.</li>';
-  if (topG[0]) html += '<li>Focus on ' + esc(topG[0].s) + ' (entry score ' + topG[0].ease + ').</li>';
-  if (!ME) html += '<li><b>Select your seller</b> from the top dropdown to unlock gap analysis &amp; share.</li>';
-  html += '</ul>';
-  html += '<div class="mu" style="margin-top:20px;text-align:center">Generated ' + new Date().toLocaleString() + '</div>';
-  html += '</div>';
-  return html;
-}
-
-function vRec(){
-  var q = (window.sq || '').toLowerCase();
-  var list = q ? F.filter(function(r){ return [r.bd, r.seller, r.prod, r.bs, r.bg, r.cat].join(' ').toLowerCase().indexOf(q) >= 0; }) : F;
-  list = list.slice().sort(function(a,b){ return b.total - a.total; }).slice(0, 300);
-  var html = '<div class="card"><input id="sq" placeholder="🔍 Search…" value="' + esc(window.sq || '') + '" style="width:100%;margin-bottom:8px" oninput="window.sq=this.value;clearTimeout(window.t);window.t=setTimeout(function(){show();var e=document.getElementById(\'sq\');if(e)e.focus();},300)">';
-  html += T(['Date','Buyer','State','Seller','Type','Src','Product','Qty','Unit ₹','Total ₹'], list.map(function(r){ return [r.date, esc(r.bd || r.bg), esc(r.bs), esc(r.seller), esc(r.cat), r.src === 'Bid' ? '🔨' : '📦', esc(r.prod.slice(0, 60)), L(r.qty), r.unit, L(r.total)]; }));
-  html += '</div>';
-  return html;
-}
-
-function vPlay(){
-  var B = buyersList(F), G = geoList(F);
-  var C = catsList(F).filter(function(c){ return c.n >= 3; });
-  var S = sellersList(F), P = ps(F);
-  var ov = B.filter(function(b){ return b.pidx >= 115; });
-  var sav = ov.reduce(function(a, b){ return a + b.val * (1 - 100/b.pidx); }, 0);
-  var topB = B.slice().sort(function(a,b){ return b.val - a.val; }).slice(0, 10);
-  var tv = sum(F, 'total');
-  var nc = C.slice().sort(function(a,b){ return b.v/b.s - a.v/a.s; })[0];
-  var sm = BANDS.map(function(b){ return ps(F.filter(function(r){ return r.qty >= b[0] && r.qty <= b[1]; })); }).filter(function(s){ return s.n >= 3; });
-  var dr = sm.length > 1 ? (sm[sm.length - 1].p50 / sm[0].p50 - 1) : null;
-  var al = F.filter(function(r){ return r.ss && r.ss !== 'Unknown'; });
-  var lw = null;
-  if (al.length){ var w = 0; for (var i = 0; i < al.length; i++) if (al[i].ss === al[i].bs) w++; lw = w / al.length; }
-  var W = [
-    ['1 · Win on price (smartly)', 'Bid at P25–P40 (' + r2(P.p25) + '–' + r2(P.p40) + ' overall median ' + r2(P.p50) + ').'],
-    ['2 · Own a niche', nc ? '<b>' + esc(nc.c) + '</b> yields ' + fm(nc.v / nc.s) + ' per seller.' : 'Need more data.'],
-    ['3 · Tier pricing by quantity', dr != null ? 'Large orders price ' + (dr * 100).toFixed(0) + '% vs smallest band. Publish slabs.' : 'Add slab pricing.'],
-    ['4 · Go where entry is easiest', 'Top entry states: <b>' + (G.slice(0, 3).map(function(g){ return esc(g.s); }).join(', ') || '—') + '</b>.' + (lw != null ? ' Local sellers win ' + pc(lw) + '.' : '')],
-    ['5 · Steal overpaying buyers', '<b>' + ov.length + '</b> buyers pay 15%+ above market (≈ ' + fm(sav) + ').'],
-    ['6 · Lock in frequent buyers', 'Top 10 buyers = ' + pc(tv ? topB.reduce(function(a,b){ return a + b.val; }, 0) / tv : 0) + ' of value.'],
-    ['7 · Time the budget cycle', 'Jan–Mar = ' + pc(fiscalQ4(F)) + ' of demand.'],
-    ['8 · Exploit fragmentation', 'Top 3 sellers hold ' + pc(S.slice(0, 3).reduce(function(a, s){ return a + s.share; }, 0)) + '. ' + S.length + ' total.']
-  ];
-  var L2 = ['Full catalogue with clear specs.', 'Get MSE / Startup / Make-in-India status.', 'Offer samples and small MOQ.', 'Bundle with printers/ribbons.', 'Deliver fast; keep high rating.', 'Bid on tenders in top 3 states.', 'Follow up 7–10 days before reorder.', 'Track competitor price drops monthly.'];
-  var html = '<div class="grid">';
-  W.forEach(function(w){ html += '<div class="card"><h3>' + w[0] + '</h3><div>' + w[1] + '</div></div>'; });
-  html += '</div><div class="card"><h3>✅ Operating checklist</h3><ul class="in">';
-  L2.forEach(function(x){ html += '<li>' + x + '</li>'; });
-  html += '</ul></div>';
-  return html;
-}
-
-var TABS = {
-  cmd: 'Command centre',
-  delta: '🔥 Deltas',
-  buy: 'Whom to approach',
-  price: 'Price lab',
-  prod: 'Products',
-  geo: 'States',
-  comp: 'Competitors',
-  mx: '🔬 Master Analyst',
-  gap: '🎯 Gaps',
-  qty: 'Qty & timing',
-  play: 'Playbook',
-  rec: 'Records',
-  rpt: '📈 Report'
+/* =========================================================
+   TABS
+   ========================================================= */
+var TABS={
+  cmd:'🎯 Command Centre',
+  map:'📍 Market Map',
+  buyers:'📞 Target Buyers',
+  comp:'🥊 Competitors & Price',
+  mx:'🔬 Master Analyst',
+  dq:'🔍 Data Quality'
 };
-var V = {
-  cmd: [vCmd, dCmd],
-  delta: [vDelta],
-  buy: [vBuy],
-  price: [vPrice, dPrice],
-  prod: [vProd],
-  geo: [vGeo],
-  comp: [vComp],
-  mx: [vAnalyst, dAnalyst],
-  gap: [vGap],
-  qty: [vQty],
-  play: [vPlay],
-  rec: [vRec],
-  rpt: [vReport]
+var V={
+  cmd:[vCmd],
+  map:[vMap,dMap],
+  buyers:[vBuyers],
+  comp:[vComp],
+  mx:[vAnalyst],
+  dq:[vDQ]
 };
 
-function mk(id, cfg){
-  var el = $(id);
-  if (!el) return;
-  if (CH[id]) { try { CH[id].destroy(); } catch(e){} CH[id] = null; }
-  Chart.defaults.color = getComputedStyle(document.body).color;
-  CH[id] = new Chart(el, cfg);
+function mk(id,cfg){
+  var el=$(id);if(!el)return;
+  if(CH[id]){try{CH[id].destroy()}catch(e){}CH[id]=null}
+  Chart.defaults.color=getComputedStyle(document.body).color;
+  CH[id]=new Chart(el,cfg)
 }
 
 function show(){
-  Object.keys(CH).forEach(function(id){
-    if (CH[id]){ try { CH[id].destroy(); } catch(e){} CH[id] = null; }
-  });
-  var html = '';
+  Object.keys(CH).forEach(function(id){if(CH[id]){try{CH[id].destroy()}catch(e){}CH[id]=null}});
+  rebuildNameCaches();
+  var h='';
   Object.keys(TABS).forEach(function(k){
-    html += '<button class="tab' + (k === TAB ? ' on' : '') + '" data-t="' + k + '">' + TABS[k] + '</button>';
+    var label=TABS[k]+(k==='mx'&&mxActiveCount()?' ('+mxActiveCount()+')':'');
+    h+='<button class="tab'+(k===TAB?' on':'')+'" data-t="'+k+'">'+label+'</button>'
   });
-  $('tabs').innerHTML = html;
-  $('view').innerHTML = F.length ? V[TAB][0]() : '<div class="card mu">No records match the filters.</div>';
-  if (F.length && V[TAB][1]) V[TAB][1]();
+  $('tabs').innerHTML=h;
+  $('view').innerHTML=F.length?V[TAB][0]():'<div class="card empty">No records match the current filter.</div>';
+  if(F.length&&V[TAB][1])V[TAB][1]()
 }
 
 function apply(){
-  var f = $('from').value, t = $('to').value, s = $('state').value, c = $('cat').value;
-  F = ALL.filter(function(r){
-    if (f && r.date < f) return false;
-    if (t && r.date > t) return false;
-    if (s && r.bs !== s) return false;
-    if (c && r.cat !== c) return false;
-    return true;
+  var f=$('from').value,t=$('to').value;
+  F=ALL.filter(function(r){
+    if(f&&r.date<f)return false;
+    if(t&&r.date>t)return false;
+    return true
   });
-  show();
+  show()
 }
 
 function init(){
-  $('app').hidden = !ALL.length;
-  if (!ALL.length) return;
-  var cnt = new Map();
-  ALL.forEach(function(r){ var k = sk(r); cnt.set(k, (cnt.get(k) || 0) + 1); });
-  var all = Array.from(cnt.entries()).sort(function(a,b){ return b[1] - a[1]; });
-  function nameOf(k){
-    for (var i = 0; i < ALL.length; i++) if (sk(ALL[i]) === k) return ALL[i].seller;
-    return k;
-  }
-  var saved = ls.g('gem_me') || '';
-  ME = saved && cnt.has(saved) ? saved : '';
-  var meHtml = '<option value=""' + (ME ? '' : ' selected') + '>All sellers (market view)</option>';
-  all.forEach(function(p){
-    meHtml += '<option value="' + esc(p[0]) + '"' + (p[0] === ME ? ' selected' : '') + '>' + esc(nameOf(p[0]).slice(0, 50)) + ' (' + p[1] + ')</option>';
-  });
-  $('me').innerHTML = meHtml;
-  var stateSet = new Set();
-  ALL.forEach(function(r){ if (r.bs && r.bs !== 'Unknown') stateSet.add(r.bs); });
-  $('state').innerHTML = '<option value="">All</option>' + Array.from(stateSet).sort().map(function(s){ return '<option>' + esc(s) + '</option>'; }).join('');
-  var catSet = new Set();
-  ALL.forEach(function(r){ catSet.add(r.cat); });
-  $('cat').innerHTML = '<option value="">All</option>' + Array.from(catSet).sort().map(function(s){ return '<option>' + esc(s) + '</option>'; }).join('');
-  var dates = ALL.map(function(r){ return r.date; }).filter(Boolean).sort();
-  $('from').value = dates[0];
-  $('to').value = dates[dates.length - 1];
-  apply();
+  $('app').hidden=!ALL.length;
+  if(!ALL.length)return;
+  var cnt=new Map();
+  ALL.forEach(function(r){var k=sk(r);cnt.set(k,(cnt.get(k)||0)+1)});
+  var all=Array.from(cnt.entries()).sort(function(a,b){return b[1]-a[1]});
+  function nameOf(k){for(var i=0;i<ALL.length;i++)if(sk(ALL[i])===k)return ALL[i].seller;return k}
+  var saved=ls.g('gem_me')||'';
+  ME=saved&&cnt.has(saved)?saved:'';
+  var h='<option value=""'+(ME?'':' selected')+'>All sellers (market view)</option>';
+  all.forEach(function(p){h+='<option value="'+esc(p[0])+'"'+(p[0]===ME?' selected':'')+'>'+esc(nameOf(p[0]).slice(0,50))+' ('+p[1]+')</option>'});
+  $('me').innerHTML=h;
+  var dates=ALL.map(function(r){return r.date}).filter(Boolean).sort();
+  $('from').value=dates[0];
+  $('to').value=dates[dates.length-1];
+  apply()
 }
 
-function msg(t, e){ $('st').textContent = t; $('st').style.color = e ? 'var(--r)' : 'var(--g)'; }
-
-function dl(txt, name, type){
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([txt], { type: type }));
-  a.download = name;
-  a.click();
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
-}
+function msg(t,e){$('st').textContent=t;$('st').style.color=e?'var(--r)':'var(--g)'}
+function dl(txt,name,type){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:type}));a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},500)}
 
 function exportXLSX(){
-  var wb = XLSX.utils.book_new();
-  var B1 = buyersList(F).map(function(b){
-    return { Score: b.score, Buyer: b.name, GSTIN: b.k, State: b.state, Phone: b.phone, Orders: b.orders, Total: b.val, AvgOrder: Math.round(b.avg), AvgQty: b.aq, CycleDays: b.cyc, DaysSinceLast: b.dsl, DueDays: b.due, PricePaidIdx: Math.round(b.pidx), Tags: b.tags.map(function(t){ return t[0]; }).join('; '), CurrentSellers: b.sel.join('; '), MainCategory: b.cat };
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(B1), 'Buyers');
-  var S1 = sellersList(F).map(function(s){
-    return { Seller: s.name, GSTIN: s.k, HomeState: s.home, Category: s.cat, Orders: s.orders, Revenue: s.v, Share: (s.share * 100).toFixed(2) + '%', Buyers: s.buyers, States: s.states, AvgQty: s.aq, PriceIdx: Math.round(s.pidx), Trend: (s.trend * 100).toFixed(1) + '%', BidWins: s.bid, DirectOrders: s.dir };
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S1), 'Sellers');
-  var C1 = catsList(F).map(function(c){
-    return { Category: c.c, Revenue: c.v, Orders: c.n, Buyers: c.b, Sellers: c.s, RevenuePerSeller: Math.round(c.v / c.s), P25: Math.round(c.p25), Median: Math.round(c.p50), AvgQty: c.aq };
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(C1), 'Categories');
-  var G1 = geoList(F).map(function(g){
-    return { State: g.s, EntryScore: g.ease, MarketValue: g.v, Orders: g.n, Buyers: g.b, Sellers: g.sl, LeaderShare: (g.t1 * 100).toFixed(1) + '%', LocalWinRate: (g.loc * 100).toFixed(1) + '%', Median: Math.round(g.p50), AvgOrder: Math.round(g.avg) };
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(G1), 'States');
-  var D = deltas(F);
-  function dl2(list, label){
-    return list.slice(0, 100).map(function(x){
-      return { Item: x.k, Label: label, Last30d: Math.round(x.now), Prev30d: Math.round(x.prev), ChangePct: (x.delta * 100).toFixed(1) + '%' };
-    });
-  }
-  var deltasRows = dl2(D.buyer, 'Buyer').concat(dl2(D.seller, 'Seller')).concat(dl2(D.state, 'State')).concat(dl2(D.size, 'Size')).concat(dl2(D.cat, 'Category'));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(deltasRows), 'Deltas');
-  var recs = F.map(function(r){
-    return { Date: r.date, Buyer: r.bd, GSTIN: r.bg, State: r.bs, Phone: r.bp, Seller: r.seller, SellerGSTIN: r.sg, Category: r.cat, Size: r.size, Brand: r.brand, Product: r.prod, Qty: r.qty, UnitPrice: r.unit, Total: r.total, Source: r.src };
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(recs), 'Records');
-  XLSX.writeFile(wb, 'gem_report_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  var wb=XLSX.utils.book_new();
+  var B1=buyersList(F).map(function(b){return{Score:scoreBuyer(b),Buyer:b.name,GSTIN:b.k,State:b.state,Segment:b.seg,Confidence:b.conf,DistinctDates:b.dates,Phone:b.phone,Orders:b.orders,Total:b.val,AvgOrder:Math.round(b.avg),CycleDays:b.cyc,DueDays:b.due,PriceIdx:Math.round(b.pidx),Sellers:b.sel.length,Tags:b.tags.map(function(t){return t[0]}).join('; ')}});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(B1),'Opportunities');
+  var S1=sellersList(F).map(function(s){return{Seller:s.name,GSTIN:s.k,HomeState:s.home,Segment:s.seg,Orders:s.orders,Revenue:s.v,Share:(s.share*100).toFixed(2)+'%',Buyers:s.buyers,PriceIdx:Math.round(s.pidx),Trend:(s.trend*100).toFixed(1)+'%'}});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S1),'Sellers');
+  var Sg=segList(F).map(function(s){return{Segment:s.s,Revenue:s.v,Orders:s.n,Share:(s.share*100).toFixed(2)+'%',Buyers:s.b,TopState:s.topState,TopCategory:s.topCat}});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Sg),'Segments');
+  var G1=geoList(F).map(function(g){return{State:g.s,EntryScore:g.ease,MarketValue:g.v,Orders:g.n,Buyers:g.b,Sellers:g.sl,Median:Math.round(g.p50)}});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(G1),'States');
+  var dq=dqReport(F);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dq.issues.map(function(x){return{Issue:x[0],Count:x[1],Severity:x[2]}})),'DataQuality');
+  var recs=F.map(function(r){return{Date:r.date,Buyer:r.bd,GSTIN:r.bg,Segment:r.seg,State:r.bs,Seller:r.seller,Cat:r.cat,Size:r.size,Brand:r.brand,Product:r.prod,Qty:r.qty,UnitPrice:r.unit,Total:r.total,Source:r.src,Flags:r.flags.join(';')}});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(recs),'Records');
+  XLSX.writeFile(wb,'gem_consultant_'+new Date().toISOString().slice(0,10)+'.xlsx')
 }
 
 function handle(f){
-  if (!f) return;
-  msg('Reading ' + f.name + ' (' + Math.round(f.size / 1024) + ' KB) …');
-  var rd = new FileReader();
-  rd.onload = function(e){
-    try {
-      var wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-      console.log('📄 Sheets:', wb.SheetNames);
-      var best = null;
-      for (var i = 0; i < wb.SheetNames.length; i++){
-        var name = wb.SheetNames[i];
-        var rows;
-        try { rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' }); } catch(err){ continue; }
-        if (!rows.length) continue;
-        var h = 0;
-        while (h < rows.length && rows[h].filter(function(c){ return String(c).trim(); }).length < 3) h++;
-        if (h >= rows.length) continue;
-        var normRow = rows[h].map(nk).map(function(x){ return String(x).toLowerCase().replace(/[^a-z0-9]/g, ''); });
-        var normExp = EXP.map(function(x){ return x.toLowerCase().replace(/[^a-z0-9]/g, ''); });
-        var m = normExp.filter(function(x){ return normRow.indexOf(x) >= 0; }).length;
-        console.log('Sheet "' + name + '": header row ' + h + ', matches ' + m);
-        if (!best || m > best.m) best = { n: name, m: m, h: h };
+  if(!f)return;
+  msg('Reading '+f.name+' …');
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      var best=null;
+      for(var i=0;i<wb.SheetNames.length;i++){
+        var name=wb.SheetNames[i],rows;
+        try{rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:''})}catch(err){continue}
+        if(!rows.length)continue;
+        var h=0;while(h<rows.length&&rows[h].filter(function(c){return String(c).trim()}).length<3)h++;
+        if(h>=rows.length)continue;
+        var nr=rows[h].map(nk).map(function(x){return String(x).toLowerCase().replace(/[^a-z0-9]/g,'')});
+        var ne=EXP.map(function(x){return x.toLowerCase().replace(/[^a-z0-9]/g,'')});
+        var m=ne.filter(function(x){return nr.indexOf(x)>=0}).length;
+        if(!best||m>best.m)best={n:name,m:m}
       }
-      if (!best || best.m < 3){
-        msg('No GeM data sheet found. Sheets: ' + wb.SheetNames.join(', ') + ' — need at least 3 standard columns.', 1);
-        return;
-      }
-      console.log('✅ Using:', best.n, best.m, 'matching columns');
-      var raw = XLSX.utils.sheet_to_json(wb.Sheets[best.n], { defval: '', raw: false }).map(function(r){
-        var o = {};
-        for (var k in r) o[nk(k)] = r[k];
-        return o;
-      });
-      console.log('Raw rows:', raw.length);
-      var cleaned = raw.map(cleanRow).filter(function(r){ return r.seller && r.date; });
-      console.log('Cleaned rows:', cleaned.length);
-      if (!cleaned.length){
-        msg('0 valid rows after cleaning. Check seller name and date columns.', 1);
-        return;
-      }
-      var seen = new Set(ALL.map(rowKey));
-      var add = 0;
-      for (var j = 0; j < cleaned.length; j++){
-        var k2 = rowKey(cleaned[j]);
-        if (!seen.has(k2)){ seen.add(k2); ALL.push(cleaned[j]); add++; }
-      }
-      var ok = ls.s(KEY, JSON.stringify(ALL));
-      msg('✅ ' + best.n + ': ' + cleaned.length + ' cleaned, ' + add + ' new, master ' + ALL.length.toLocaleString('en-IN') + ' rows.' + (ok ? '' : ' (Too big to persist — export.)'));
-      init();
-    } catch(x){
-      console.error('❌ Upload error:', x);
-      msg('Error: ' + x.message, 1);
-    }
+      if(!best||best.m<3){msg('No GeM sheet found.',1);return}
+      var raw=XLSX.utils.sheet_to_json(wb.Sheets[best.n],{defval:'',raw:false}).map(function(r){var o={};for(var k in r)o[nk(k)]=r[k];return o});
+      var cleaned=raw.map(cleanRow).filter(function(r){return r.seller&&r.date});
+      if(!cleaned.length){msg('0 valid rows.',1);return}
+      var seen=new Set(ALL.map(rowKey)),add=0;
+      for(var j=0;j<cleaned.length;j++){var k2=rowKey(cleaned[j]);if(!seen.has(k2)){seen.add(k2);ALL.push(cleaned[j]);add++}}
+      ls.s(KEY,JSON.stringify(ALL));
+      msg('✅ '+cleaned.length+' cleaned · '+add+' new · master '+ALL.length.toLocaleString('en-IN'));
+      init()
+    }catch(x){console.error(x);msg('Error: '+x.message,1)}
   };
-  rd.onerror = function(){ msg('Could not read the file.', 1); };
-  rd.readAsArrayBuffer(f);
+  rd.readAsArrayBuffer(f)
 }
 
 (function wireUpload(){
-  var dz = $('drop'), fi = $('file');
-  if (!dz || !fi){ console.error('Upload elements missing'); return; }
-  dz.addEventListener('click', function(e){ if (e.target !== fi) e.preventDefault(); fi.click(); });
-  dz.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); } });
-  dz.setAttribute('tabindex', '0');
-  dz.setAttribute('role', 'button');
-  fi.addEventListener('change', function(e){
-    var f = e.target.files && e.target.files[0];
-    if (f) handle(f);
-    e.target.value = '';
-  });
-  fi.addEventListener('click', function(e){ e.stopPropagation(); });
-  ['dragenter','dragover'].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('over'); }); });
-  ['dragleave','drop'].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('over'); }); });
-  dz.addEventListener('drop', function(e){
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) handle(f);
-  });
-  console.log('✅ Upload wiring ready.');
+  var dz=$('drop'),fi=$('file');
+  if(!dz||!fi)return;
+  dz.addEventListener('click',function(e){if(e.target!==fi)e.preventDefault();fi.click()});
+  fi.addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(f)handle(f);e.target.value=''});
+  fi.addEventListener('click',function(e){e.stopPropagation()});
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.add('over')})});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('over')})});
+  dz.addEventListener('drop',function(e){var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)handle(f)});
 })();
 
-$('tabs').addEventListener('click', function(e){
-  var t = e.target.dataset && e.target.dataset.t;
-  if (t){ TAB = t; show(); }
-});
-
-$('me').addEventListener('change', function(e){
-  ME = e.target.value;
-  ls.s('gem_me', ME);
-  show();
-});
-
-['from','to','state','cat'].forEach(function(i){
-  $(i).addEventListener('change', apply);
-  $(i).addEventListener('input', apply);
-});
-
-$('exp').addEventListener('click', function(){
-  if (ALL.length) dl(JSON.stringify(ALL), 'gem_master_' + new Date().toISOString().slice(0, 10) + '.json', 'application/json');
-});
-$('xls').addEventListener('click', function(){ if (ALL.length) exportXLSX(); });
-$('prt').addEventListener('click', function(){ window.print(); });
-$('rst').addEventListener('click', function(){
-  if (confirm('Delete ALL master data?')){ ls.d(KEY); ALL = []; init(); }
-});
+$('tabs').addEventListener('click',function(e){var t=e.target.dataset&&e.target.dataset.t;if(t){TAB=t;show()}});
+$('me').addEventListener('change',function(e){ME=e.target.value;ls.s('gem_me',ME);show()});
+['from','to'].forEach(function(i){$(i).addEventListener('change',apply);$(i).addEventListener('input',apply)});
+$('xls').addEventListener('click',function(){if(ALL.length)exportXLSX()});
+$('jsn').addEventListener('click',function(){if(ALL.length)dl(JSON.stringify(ALL),'gem_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json')});
+$('prt').addEventListener('click',function(){window.print()});
+$('rst').addEventListener('click',function(){if(confirm('Delete ALL master data?')){ls.d(KEY);ALL=[];init()}});
 
 init();
 </script>
