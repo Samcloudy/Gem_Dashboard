@@ -59,6 +59,12 @@ th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap;font-
 .slider{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px}
 .slider input[type=range]{flex:1;max-width:180px}
 .slider .val{color:var(--pr);font-weight:600;min-width:30px;text-align:right}
+.chip{display:inline-block;padding:4px 10px;margin:3px;border-radius:12px;font-size:11.5px;font-weight:500;background:var(--ac);color:var(--pr);cursor:pointer;transition:background .1s}
+.chip:hover{background:var(--pr);color:#fff}
+.chip.on{background:var(--pr);color:#fff}
+details.spec{margin:8px 0}
+details.spec summary{cursor:pointer;font-weight:600;color:var(--pr);padding:8px 0;font-size:13.5px}
+details.spec[open] summary{margin-bottom:8px}
 @media print{#drop,.bar,.tabs,.crumb{display:none}.card{box-shadow:none}}
 </style>
 </head>
@@ -70,7 +76,7 @@ th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap;font-
 <label id="drop" for="file">
   📂 <b>Drop GeM Excel here</b> or click to select
   <input type="file" id="file" accept=".xlsx,.xls">
-  <div class="mu">Uploads merge into a de-duplicated master kept in this browser (localStorage — back up regularly via ⬇ JSON)</div>
+  <div class="mu">Uploads merge into a de-duplicated master kept in this browser</div>
 </label>
 
 <div id="st" class="mu"></div>
@@ -79,6 +85,14 @@ th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap;font-
   <div class="card bar">
     <label>From <input type="date" id="from"></label>
     <label>To <input type="date" id="to"></label>
+    <label>Mode <select id="mode">
+      <option value="">All modes</option>
+      <option value="Direct">📦 Direct (GEMC)</option>
+      <option value="Bid">🔨 Bid</option>
+      <option value="RA">🔄 Reverse Auction</option>
+      <option value="Bid/RA">🔨🔄 Bid / RA</option>
+      <option value="Unknown">❓ Unknown</option>
+    </select></label>
     <label>Seller <select id="me"></select></label>
     <button class="s" id="xls">⬇ Excel</button>
     <button class="s" id="jsn">⬇ Backup JSON</button>
@@ -93,14 +107,29 @@ th{position:sticky;top:0;background:var(--ac);z-index:1;white-space:nowrap;font-
 /* =========================================================
    STATE
    ========================================================= */
-var KEY='gem_master_v10';
-var ALL=[],F=[],ME='',TAB='cmd',CH={},MX={};
-var W={rec:20,freq:20,val:25,fit:15,comp:10,conf:10}; // adjustable weights
+var KEY='gem_master_v11';
+var ALL=[],F=[],ME='',MODE='',TAB='cmd',CH={},MX={};
+var W={rec:20,freq:20,val:25,fit:15,comp:10,conf:10};
 var $=function(id){return document.getElementById(id)};
 var ls={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v);return 1}catch(e){return 0}},d:function(k){try{localStorage.removeItem(k)}catch(e){}}};
 try{ALL=JSON.parse(ls.g(KEY)||'[]')}catch(e){ALL=[]}
 
 var EXP=['Generated Date','Buyer Designation','Buyer Contact No','Buyer GSTIN','Buyer Address','Seller Company Name','Seller Contact No','Seller GSTIN','Seller Address','Product Name','Ordered Quantity','Unit Price','Price (Inclusive of All Duties & Taxes) - INR'];
+
+/* NEW: Specification columns — auto-detected by fuzzy name match */
+var SPEC_MAP={
+  mode:    ['procurement mode','purchase mode','mode of procurement'],
+  ptype:   ['product type','label type'],
+  material:['material type','material'],
+  printing:['printing compatibility','print type','printer'],
+  adhesive:['adhesive type','adhesive'],
+  finish:  ['surface finish','finish'],
+  format:  ['label format','form factor','format'],
+  die:     ['die-cut type','die cut','dicut'],
+  gsm:     ['gsm','grammage','gsm of the label sticker'],
+  size:    ['size of a single label sticker','label size','size'],
+  pack:    ['number of label stickers in a packet','pack quantity','pack size','qty per packet']
+};
 
 var CATS=[
   ['Thermal / Barcode rolls',/thermal|barcode|direct|ttr|ribbon|transfer/i],
@@ -138,7 +167,6 @@ function cat(p){for(var i=0;i<CATS.length;i++)if(CATS[i][1].test(p))return CATS[
 function segment(t){for(var i=0;i<SEGMENTS.length;i++)if(SEGMENTS[i][1].test(t))return SEGMENTS[i][0];return '🎯 Other Govt'}
 function size(p){var m=String(p).match(/(\d+(?:\.\d+)?)\s*(?:mm|cm|in|inch)?\s*[x\u00D7*]\s*(\d+(?:\.\d+)?)\s*(mm|cm|inch|in)?/i);return m?m[1]+'\u00D7'+m[2]+(m[3]?m[3].toLowerCase():''):''}
 function brand(p){var up=String(p).toUpperCase();for(var i=0;i<BRANDS.length;i++){if(up.indexOf(BRANDS[i].toUpperCase())===0)return BRANDS[i];if(up.indexOf(BRANDS[i].toUpperCase()+' ')>=0)return BRANDS[i]}var m=String(p).match(/^([A-Z][A-Za-z0-9\-]{2,20})/);return m?m[1].toUpperCase():'(unbranded)'}
-function tender(pdf){if(/^GEMC-/i.test(pdf))return'Direct';if(/^GEM-/i.test(pdf))return'Bid';return'Unknown'}
 function nk(k){return String(k).replace(/[\u2013\u2014]/g,'-').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim()}
 function ct(s){return String(s==null?'':s).replace(/\s{2,}/g,' ').trim()}
 function td(s){return String(s==null?'':s).replace(/[-\s]+$/,'').trim()}
@@ -154,6 +182,19 @@ function parseDate(v){
   var d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10)
 }
 
+/* Find a value in the raw row for a given spec key (fuzzy header match) */
+function specValue(raw, key){
+  var patterns = SPEC_MAP[key];
+  if (!patterns) return '';
+  for (var k in raw){
+    var low = String(k).toLowerCase();
+    for (var i = 0; i < patterns.length; i++){
+      if (low.indexOf(patterns[i]) >= 0) return ct(raw[k]);
+    }
+  }
+  return '';
+}
+
 function cleanRow(r){
   var q=num(r['Ordered Quantity']),u=num(r['Unit Price']),t=num(r['Price (Inclusive of All Duties & Taxes) - INR']);
   var p=ct(r['Product Name']),pdf=ct(r['One actual sample PDF']||r['Sample PDF']||r['PDF']||'');
@@ -162,12 +203,34 @@ function cleanRow(r){
   if(!q||q<=0)flags.push('qty_invalid');
   if(!u||u<=0)flags.push('unit_invalid');
   if(!t||t<=0)flags.push('total_invalid');
+
+  /* Extract spec fields */
+  var modeSpec = specValue(r, 'mode');
+  var src = 'Unknown';
+  if (modeSpec){
+    if (/direct|gemc/i.test(modeSpec)) src = 'Direct';
+    else if (/bid|gem\b|tender|reverse/i.test(modeSpec)) src = 'Bid';
+  } else if (/^GEMC-/i.test(pdf)) src = 'Direct';
+  else if (/^GEM-/i.test(pdf)) src = 'Bid';
+
   return{
     date:parseDate(r['Generated Date']),bd:ct(r['Buyer Designation']),bp:td(r['Buyer Contact No']),
     bg:gst(r['Buyer GSTIN']),bs:parseState(r['Buyer Address']),
     seller:ct(r['Seller Company Name']),sg:gst(r['Seller GSTIN']),ss:parseState(r['Seller Address']),
     prod:p,cat:cat(p),size:size(p),brand:brand(p),
-    qty:q,unit:u,total:t>0?t:(q>0&&u>0?q*u:0),src:tender(pdf),seg:segment(buyerTxt),
+    qty:q,unit:u,total:t>0?t:(q>0&&u>0?q*u:0),src:src,seg:segment(buyerTxt),
+    // Spec fields
+    specMode: modeSpec || src,
+    specPtype: specValue(r, 'ptype'),
+    specMaterial: specValue(r, 'material'),
+    specPrinting: specValue(r, 'printing'),
+    specAdhesive: specValue(r, 'adhesive'),
+    specFinish: specValue(r, 'finish'),
+    specFormat: specValue(r, 'format'),
+    specDie: specValue(r, 'die'),
+    specGsm: num(specValue(r, 'gsm')),
+    specSize: specValue(r, 'size') || size(p),
+    specPack: num(specValue(r, 'pack')),
     flags:flags
   }
 }
@@ -194,7 +257,6 @@ function T(headers,rows){
 }
 function pill(t,c){return'<span class="p '+(c||'')+'">'+t+'</span>'}
 
-/* name caches */
 var _nc={seller:{},buyer:{}};
 function rebuildNameCaches(){
   _nc={seller:{},buyer:{}};
@@ -225,7 +287,6 @@ function buyersList(rows){
     var selArr=[];grp(l,function(r){return r.seller}).forEach(function(v,kk){selArr.push([kk,v.length])});selArr.sort(function(a,b){return b[1]-a[1]});
     var cats=[];grp(l,function(r){return r.cat}).forEach(function(v,kk){cats.push([kk,sum(v,'total')])});cats.sort(function(a,b){return b[1]-a[1]});
     var segs=[];grp(l,function(r){return r.seg}).forEach(function(v,kk){segs.push([kk,sum(v,'total')])});segs.sort(function(a,b){return b[1]-a[1]});
-    // Confidence: 3+ independent purchase dates = HIGH; 2 = MED; 1 = LOW
     var conf = ds.length>=3?'HIGH':ds.length===2?'MED':'LOW';
     out.push({k:k,name:last.bd||k,state:last.bs,phone:last.bp,orders:l.length,val:val,avg:val/l.length,aq:Math.round(sum(l,'qty')/l.length),cyc:cyc,dsl:dsl,due:due,pidx:pidx,sel:selArr.map(function(x){return x[0]}),cat:cats[0]?cats[0][0]:'',seg:segs[0]?segs[0][0]:'',last:last.date,dates:ds.length,conf:conf,rows:l});
   });
@@ -244,11 +305,10 @@ function buyersList(rows){
 }
 
 function scoreBuyer(b){
-  // 0-100 score with adjustable weights (sum to 100)
   var rec = b.dsl<30?100:b.dsl<90?75:b.dsl<180?45:b.dsl<365?20:5;
   var freq = Math.min(100, b.orders*18);
   var val = Math.min(100, Math.log10(b.val+1)*12);
-  var fit = 70; // neutral — product fit needs seller's catalog
+  var fit = 70;
   var comp = b.sel.length<=1?100:b.sel.length<=3?70:40;
   var conf = b.conf==='HIGH'?100:b.conf==='MED'?60:30;
   var total = (rec*W.rec + freq*W.freq + val*W.val + fit*W.fit + comp*W.comp + conf*W.conf)/(W.rec+W.freq+W.val+W.fit+W.comp+W.conf);
@@ -316,10 +376,8 @@ function geoList(rows){
 
 function fiscalQ4(rows){var t=sum(rows,'total');if(!t)return 0;var q=0;for(var i=0;i<rows.length;i++){var m=+rows[i].date.slice(5,7)-1;if(m===0||m===1||m===2)q+=rows[i].total}return q/t}
 
-/* Data quality report */
 function dqReport(rows){
   var issues=[];
-  var totalRows=rows.length;
   var missingPrice=0,zeroQty=0,negativeQty=0,badDate=0,noSeller=0,noBuyer=0,noProduct=0,outlierPrice=0;
   var prices=[];
   for(var i=0;i<rows.length;i++){
@@ -335,9 +393,7 @@ function dqReport(rows){
   }
   prices.sort(function(a,b){return a-b});
   var p50=qt(prices,.5),p99=qt(prices,.99);
-  for(var j=0;j<rows.length;j++){
-    if(rows[j].unit>0&&rows[j].unit>p99*3)outlierPrice++;
-  }
+  for(var j=0;j<rows.length;j++) if(rows[j].unit>0&&rows[j].unit>p99*3)outlierPrice++;
   issues.push(['Missing / zero price (total)',missingPrice,'r']);
   issues.push(['Zero quantity',zeroQty,'a']);
   issues.push(['Negative quantity',negativeQty,'r']);
@@ -345,9 +401,8 @@ function dqReport(rows){
   issues.push(['Missing seller name',noSeller,'a']);
   issues.push(['Missing buyer identifier',noBuyer,'r']);
   issues.push(['Missing product name',noProduct,'a']);
-  issues.push(['Unit price >3× 99th pct (possible outliers)',outlierPrice,'a']);
-  var recon=sum(rows,'total');
-  return{issues:issues,totalRows:totalRows,recon:recon,p50:p50};
+  issues.push(['Unit price >3× 99th pct',outlierPrice,'a']);
+  return{issues:issues,totalRows:rows.length,recon:sum(rows,'total'),p50:p50};
 }
 
 /* =========================================================
@@ -371,6 +426,14 @@ function mxRows(rows){
       if(k==='brand'&&r.brand!==MX[k])return false;
       if(k==='src'&&r.src!==MX[k])return false;
       if(k==='seg'&&r.seg!==MX[k])return false;
+      if(k==='specPtype'&&r.specPtype!==MX[k])return false;
+      if(k==='specMaterial'&&r.specMaterial!==MX[k])return false;
+      if(k==='specPrinting'&&r.specPrinting!==MX[k])return false;
+      if(k==='specAdhesive'&&r.specAdhesive!==MX[k])return false;
+      if(k==='specFinish'&&r.specFinish!==MX[k])return false;
+      if(k==='specFormat'&&r.specFormat!==MX[k])return false;
+      if(k==='specDie'&&r.specDie!==MX[k])return false;
+      if(k==='specSize'&&r.specSize!==MX[k])return false;
     }
     return true
   })
@@ -378,7 +441,7 @@ function mxRows(rows){
 function mxActiveCount(){var n=0;for(var k in MX)if(MX[k])n++;return n}
 
 /* =========================================================
-   TAB 1 — NEW SELLER COMMAND CENTRE
+   TAB 1 — COMMAND CENTRE
    ========================================================= */
 function vCmd(){
   var tot=sum(F,'total'),n=F.length;
@@ -388,13 +451,9 @@ function vCmd(){
   var segs=segList(F);
   var topSeg=segs[0];
 
-  // Ranked opportunities
-  var opps=B.slice(0,30).map(function(b){
+  var opps=B.slice(0,50).map(function(b){
     var sc=scoreBuyer(b);
-    var action = sc>=75 ? 'Call today'
-               : sc>=55 ? 'Contact this week'
-               : sc>=35 ? 'Watch'
-               : 'Low priority';
+    var action = sc>=75 ? 'Call today' : sc>=55 ? 'Contact this week' : sc>=35 ? 'Watch' : 'Low priority';
     var reasons=[];
     if(b.dsl<=30)reasons.push('recent');
     if(b.orders>=3)reasons.push(b.orders+' orders');
@@ -405,42 +464,34 @@ function vCmd(){
   }).sort(function(a,b){return b.score-a.score});
 
   var html='';
-
-  // Hero KPIs
   html+='<div class="hero">';
   html+='<h2>🎯 Command Centre — what to do next</h2>';
   html+='<div class="kpis">';
-  html+='<div class="kpi"><b>'+fm(tot)+'</b><span>Recorded transaction value</span><small>sum of "Price (Incl. All Duties)" for all filtered rows</small></div>';
-  html+='<div class="kpi"><b>'+n.toLocaleString('en-IN')+'</b><span>Transaction records</span><small>distinct rows after dedupe</small></div>';
-  html+='<div class="kpi"><b>'+B.length+'</b><span>Unique buyers (GSTIN or name)</span></div>';
+  html+='<div class="kpi"><b>'+fm(tot)+'</b><span>Recorded transaction value</span><small>sum of "Price (Incl. All Duties)"</small></div>';
+  html+='<div class="kpi"><b>'+n.toLocaleString('en-IN')+'</b><span>Transaction records</span></div>';
+  html+='<div class="kpi"><b>'+B.length+'</b><span>Unique buyers</span></div>';
   html+='<div class="kpi"><b>'+S.length+'</b><span>Unique sellers</span></div>';
-  html+='<div class="kpi"><b>'+r2(P.p50)+'</b><span>Median unit price</span><small>excludes rows with unit≤0</small></div>';
-  html+='<div class="kpi"><b>'+opps.filter(function(o){return o.score>=75}).length+'</b><span>Priority buyers (score ≥75)</span></div>';
+  html+='<div class="kpi"><b>'+r2(P.p50)+'</b><span>Median unit price</span></div>';
+  html+='<div class="kpi"><b>'+opps.filter(function(o){return o.score>=75}).length+'</b><span>Priority buyers (≥75)</span></div>';
   html+='</div>';
-  if(topSeg)html+='<div style="margin-top:12px;font-size:13.5px">Largest segment in this data: <b>'+esc(topSeg.s)+'</b> · '+fm(topSeg.v)+' · '+topSeg.n+' orders · '+topSeg.b+' buyers.</div>';
+  if(topSeg)html+='<div style="margin-top:12px;font-size:13.5px">Largest segment: <b>'+esc(topSeg.s)+'</b> · '+fm(topSeg.v)+' · '+topSeg.n+' orders · '+topSeg.b+' buyers.</div>';
   html+='</div>';
 
-  // Data quality summary
   if(dq.issues.some(function(x){return x[1]>0&&x[2]==='r'})){
-    html+='<div class="warn"><b>⚠️ Data quality:</b> Some rows have invalid data. ';
-    html+='<a href="javascript:TAB=\'dq\';show()" style="color:var(--pr);font-weight:600">See full report →</a></div>';
+    html+='<div class="warn"><b>⚠️ Data quality:</b> Some rows have invalid data. <a href="javascript:TAB=\'dq\';show()" style="color:var(--pr);font-weight:600">See full report →</a></div>';
   }
 
-  // Ranked opportunities table
   html+='<h2>📞 Priority buyers — ranked by opportunity score</h2>';
-  html+='<div class="mu" style="margin-bottom:8px">Score combines recency, frequency, historical value, competition, and data confidence. Adjust weights below.</div>';
+  html+='<div class="mu" style="margin-bottom:8px">Score combines recency, frequency, historical value, competition, and data confidence.</div>';
 
-  // Weight sliders
   html+='<div class="card"><h3>⚖️ Adjust scoring weights</h3>';
   ['rec','freq','val','fit','comp','conf'].forEach(function(k){
     var lbl={rec:'Recency',freq:'Frequency',val:'Value',fit:'Product fit*',comp:'Fewer sellers',conf:'Data confidence'}[k];
     html+='<div class="slider"><span style="width:120px">'+lbl+'</span><input type="range" min="0" max="40" value="'+W[k]+'" oninput="W.'+k+'=+this.value;document.getElementById(\'wv_'+k+'\').textContent=this.value;if(window._wto)clearTimeout(window._wto);window._wto=setTimeout(show,250)"><span class="val" id="wv_'+k+'">'+W[k]+'</span></div>';
   });
-  html+='<div class="mu">*Product fit currently set to neutral (70) — plug in your catalog later.</div>';
-  html+='</div>';
+  html+='<div class="mu">*Product fit currently neutral (70) — plug in your catalog later.</div></div>';
 
-  // Opportunity table
-  var rows=opps.slice(0,50).map(function(o){
+  var rows=opps.map(function(o){
     var b=o.b;
     var actionPill=o.score>=75?pill('CALL TODAY','r'):o.score>=55?pill('THIS WEEK','a'):o.score>=35?pill('WATCH',''):pill('LOW','');
     var dueStr=b.due==null?'—':b.due<0?(-b.due)+'d overdue':'in '+b.due+'d';
@@ -462,12 +513,11 @@ function vCmd(){
   html+='<div class="card">'+T(['Score','Action','Buyer','State','Confidence','Orders','Total ₹','Avg ₹','Cycle','Next due','Price idx','Segment','Why it ranks','Phone'],rows)+'</div>';
   html+='<button class="s" onclick="csvOpps()">⬇ Export opportunity list CSV</button>';
 
-  // 3 next-step cards
   html+='<h2>⚡ What to do today</h2>';
   html+='<div class="grid">';
-  html+='<div class="clickable card"><h3>1. Call top-ranked buyers</h3><div>'+opps.filter(function(o){return o.score>=75}).length+' buyers score ≥75. Start with the first 5 — they have recent activity, repeat purchases, or few competing sellers.</div></div>';
-  html+='<div class="clickable card"><h3>2. Check the price ladder</h3><div>Median unit price is <b>'+r2(P.p50)+'</b>. Verify this for your exact SKU before quoting. <a href="javascript:TAB=\'comp\';show()" style="color:var(--pr)">Open Competitors →</a></div></div>';
-  html+='<div class="clickable card"><h3>3. Pick a product category</h3><div>The largest category here is <b>'+esc((catsList(F)[0]||{}).c||'—')+'</b>. Check sizes and buyers before committing stock. <a href="javascript:TAB=\'map\';show()" style="color:var(--pr)">Open Market Map →</a></div></div>';
+  html+='<div class="clickable card"><h3>1. Call top-ranked buyers</h3><div>'+opps.filter(function(o){return o.score>=75}).length+' buyers score ≥75. Start with the first 5.</div></div>';
+  html+='<div class="clickable card"><h3>2. Check the price ladder</h3><div>Median unit price is <b>'+r2(P.p50)+'</b>. Verify this for your exact SKU. <a href="javascript:TAB=\'comp\';show()" style="color:var(--pr)">Open Competitors →</a></div></div>';
+  html+='<div class="clickable card"><h3>3. Check product specs</h3><div>Use the Product Specs tab to see which GSM/material/printing combos dominate. <a href="javascript:TAB=\'spec\';show()" style="color:var(--pr)">Open Specs →</a></div></div>';
   html+='</div>';
 
   return html
@@ -503,7 +553,7 @@ function vMap(){
   var q4=fiscalQ4(F);
 
   var html='';
-  html+='<div class="hero"><h2>📍 Market Map — where demand lives</h2>';
+  html+='<div class="hero"><h2>📍 Market Map</h2>';
   html+='<div class="kpis">';
   html+='<div class="kpi"><b>'+fm(tot)+'</b><span>Total value</span></div>';
   html+='<div class="kpi"><b>'+n.toLocaleString('en-IN')+'</b><span>Orders</span></div>';
@@ -516,18 +566,18 @@ function vMap(){
   html+='<h2>🏢 Segments — click any</h2>';
   html+='<div class="grid">';
   segs.forEach(function(s){
-    html+='<div class="seg-card clickable card" onclick="drill(\'seg\','+"'"+s.s.replace(/'/g,"\\'")+"'"+')">';
-    html+='<h4>'+esc(s.s)+'</h4>';
-    html+='<div class="val">'+fm(s.v)+'</div>';
-    html+='<div class="sub">'+s.n+' orders · '+s.b+' buyers · '+s.sl+' sellers</div>';
-    if(s.topState)html+='<div class="sub">📍 '+esc(s.topState)+' · 🏷️ '+esc(s.topCat||'—')+'</div>';
+    html+='<div class="clickable card" onclick="drill(\'seg\','+"'"+s.s.replace(/'/g,"\\'")+"'"+')">';
+    html+='<h3>'+esc(s.s)+'</h3>';
+    html+='<div style="font-size:22px;font-weight:700;color:var(--pr)">'+fm(s.v)+'</div>';
+    html+='<div class="mu">'+s.n+' orders · '+s.b+' buyers · '+s.sl+' sellers</div>';
+    if(s.topState)html+='<div class="mu">📍 '+esc(s.topState)+' · 🏷️ '+esc(s.topCat||'—')+'</div>';
     html+='</div>';
   });
   html+='</div>';
 
   html+='<h2>🗺️ States — click any</h2>';
   html+='<div class="card"><div class="grid"><div><h3>Value by state</h3><div class="ch"><canvas id="c1"></canvas></div></div>';
-  html+='<div><h3>Entry score (click row)</h3>';
+  html+='<div><h3>Entry score</h3>';
   html+=T(['#','State','Entry','Market ₹','Buyers','Sellers'],
     geos.slice(0,15).map(function(g,i){
       return['<span class="rank">'+(i+1)+'</span>',
@@ -539,17 +589,17 @@ function vMap(){
   html+='<h2>🏷️ Categories — click any</h2>';
   html+='<div class="grid-4">';
   cats.forEach(function(c){
-    html+='<div class="seg-card clickable card" onclick="drill(\'cat\','+"'"+c.c.replace(/'/g,"\\'")+"'"+')" style="padding:10px">';
-    html+='<h4 style="font-size:13px">'+esc(c.c)+'</h4>';
-    html+='<div class="val" style="font-size:17px">'+fm(c.v)+'</div>';
-    html+='<div class="sub">'+c.n+' orders · median '+r2(c.p50)+'</div>';
+    html+='<div class="clickable card" onclick="drill(\'cat\','+"'"+c.c.replace(/'/g,"\\'")+"'"+')" style="padding:10px">';
+    html+='<h3 style="font-size:13px">'+esc(c.c)+'</h3>';
+    html+='<div style="font-size:17px;font-weight:700;color:var(--pr)">'+fm(c.v)+'</div>';
+    html+='<div class="mu">'+c.n+' orders · median '+r2(c.p50)+'</div>';
     html+='</div>';
   });
   html+='</div>';
 
   html+='<h2>📅 Monthly pattern</h2>';
   html+='<div class="card"><div class="ch"><canvas id="c2"></canvas></div>';
-  html+='<div class="mu">Descriptive view — not a forecast. Data covers only the months present in the file.</div></div>';
+  html+='<div class="mu">Descriptive view — not a forecast.</div></div>';
 
   return html
 }
@@ -575,7 +625,7 @@ function vBuyers(){
 
   var html='';
   html+='<div class="hero"><h2>📞 Target Buyers</h2>';
-  html+='<div style="font-size:13.5px;line-height:1.6">Ranked by <b>historical</b> activity. Reorder windows are <b>estimates</b> with confidence levels — not confirmed procurement.</div></div>';
+  html+='<div style="font-size:13.5px;line-height:1.6">Ranked by <b>historical</b> activity. Reorder windows are <b>estimates</b> with confidence levels.</div></div>';
 
   html+='<div class="card"><div class="bar">';
   Object.keys(labels).forEach(function(x){
@@ -591,14 +641,14 @@ function vBuyers(){
       '<a href="javascript:drill(\'buyer\','+"'"+b.k.replace(/'/g,"\\'")+"'"+')" style="color:var(--pr);font-weight:600;text-decoration:none">'+esc(b.name.slice(0,32))+'</a>',
       esc(b.state),confPill,
       b.orders,L(b.val),L(b.avg),b.cyc?b.cyc+'d':'—',status,
-      b.dates, // number of distinct purchase dates — evidence for reorder
+      b.dates,
       b.pidx?b.pidx.toFixed(0):'—',
       esc(b.seg.slice(0,18)),
       b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':'—'
     ]
   });
   html+='<div class="card">'+T(['Score','Buyer','State','Conf','Orders','Total ₹','Avg ₹','Cycle','Next due est.','Distinct dates','Price idx','Segment','Phone'],rows)+'</div>';
-  html+='<div class="mu">"Next due est." requires ≥3 distinct purchase dates. Below that, cycle is unknown.</div>';
+  html+='<div class="mu">"Next due est." requires ≥3 distinct purchase dates.</div>';
 
   return html
 }
@@ -615,16 +665,16 @@ function vComp(){
   html+='<div class="kpis">';
   html+='<div class="kpi"><b>'+S.length+'</b><span>Active sellers</span></div>';
   html+='<div class="kpi"><b>'+pc(top3)+'</b><span>Top 3 share</span></div>';
-  html+='<div class="kpi"><b>'+P.n+'</b><span>Valid priced rows</span><small>unit>0</small></div>';
+  html+='<div class="kpi"><b>'+P.n+'</b><span>Valid priced rows</span></div>';
   html+='<div class="kpi"><b>'+r2(P.p50)+'</b><span>Median unit</span></div>';
   html+='</div></div>';
 
-  html+='<h2>💰 Observed price distribution — for context only</h2>';
-  html+='<div class="info">These are prices buyers actually paid in your dataset. They describe the past, not your probability of winning. Your cost + margin decide your bid.</div>';
+  html+='<h2>💰 Observed price distribution</h2>';
+  html+='<div class="info">Prices buyers paid in your dataset. They describe the past, not your probability of winning.</div>';
   html+='<div class="card">'+T(['Percentile','Unit price','Meaning'],
-    [['P10','<b>'+r2(P.p10)+'</b>','10% of recorded unit prices were below this'],
+    [['P10','<b>'+r2(P.p10)+'</b>','10% of recorded prices were below this'],
      ['P25','<b>'+r2(P.p25)+'</b>','Aggressive position'],
-     ['P50 · median','<b>'+r2(P.p50)+'</b>','Middle of observed values'],
+     ['P50 · median','<b>'+r2(P.p50)+'</b>','Middle of observed'],
      ['P75','<b>'+r2(P.p75)+'</b>','Upper quartile'],
      ['P90','<b>'+r2(P.p90)+'</b>','10% of recorded prices were above this']])+'</div>';
 
@@ -643,13 +693,150 @@ function vComp(){
 }
 
 /* =========================================================
-   TAB 5 — MASTER ANALYST
+   TAB 5 — PRODUCT SPECS (NEW)
+   ========================================================= */
+function vSpec(){
+  var rows=F;
+  if(!rows.length)return '<div class="card empty">Upload data with spec columns to see this view.</div>';
+
+  // Check if spec data exists
+  var specFields = ['specPtype','specMaterial','specPrinting','specAdhesive','specFinish','specFormat','specDie'];
+  var hasSpec = false;
+  for (var i = 0; i < rows.length && !hasSpec; i++){
+    for (var j = 0; j < specFields.length; j++){
+      if (rows[i][specFields[j]]){ hasSpec = true; break; }
+    }
+  }
+
+  var tot = sum(rows, 'total');
+
+  var html = '';
+  html += '<div class="hero"><h2>🏷️ Product Specs — what combination actually sells</h2>';
+  html += '<div class="kpis">';
+  html += '<div class="kpi"><b>'+rows.length.toLocaleString('en-IN')+'</b><span>Orders in slice</span></div>';
+  html += '<div class="kpi"><b>'+fm(tot)+'</b><span>Value</span></div>';
+  html += '<div class="kpi"><b>'+r2(med(rows))+'</b><span>Median unit</span></div>';
+  html += '<div class="kpi"><b>'+ps(rows).n+'</b><span>Rows with valid price</span></div>';
+  html += '</div></div>';
+
+  if (!hasSpec){
+    html += '<div class="warn">Your uploaded data does not contain spec columns (Product Type / Material / Printing / Adhesive / Finish / Format / Die / GSM / Size / Pack). The dashboard will still work with category+size from the Product Name.</div>';
+  }
+
+  /* Helper — breakdown for a spec field, clickable chips + counts */
+  function specBreak(field, label, icon){
+    var counts = new Map();
+    var values = 0;
+    for (var i = 0; i < rows.length; i++){
+      var v = rows[i][field];
+      if (!v) continue;
+      values++;
+      counts.set(v, (counts.get(v) || 0) + 1);
+    }
+    if (!values) return '';
+    var list = [];
+    counts.forEach(function(n, k){ list.push([k, n]); });
+    list.sort(function(a,b){ return b[1] - a[1]; });
+    var top = list.slice(0, 12);
+
+    var html2 = '<div class="card"><h3>'+icon+' '+label+' <span class="mu">('+values+' rows with value)</span></h3>';
+    html2 += '<div>';
+    top.forEach(function(x){
+      var val = String(x[0]).replace(/'/g, "\\'");
+      html2 += '<span class="chip'+(MX[field]===x[0]?' on':'')+'" onclick="MX.'+field+'=\''+val+'\';TAB=\'spec\';show()">'+esc(String(x[0]).slice(0,40))+' <span style="opacity:.6">· '+x[1]+'</span></span>';
+    });
+    html2 += '</div></div>';
+    return html2;
+  }
+
+  html += specBreak('specPtype', 'Product Type', '🏷️');
+  html += specBreak('specMaterial', 'Material Type', '🧱');
+  html += specBreak('specPrinting', 'Printing Compatibility', '🖨️');
+  html += specBreak('specAdhesive', 'Adhesive Type', '📎');
+  html += specBreak('specFinish', 'Surface Finish', '✨');
+  html += specBreak('specFormat', 'Label Format', '📄');
+  html += specBreak('specDie', 'Die-Cut Type', '✂️');
+  html += specBreak('specSize', 'Label Size (W×H)', '📐');
+
+  /* GSM distribution */
+  var gsms = [];
+  for (var i = 0; i < rows.length; i++) if (rows[i].specGsm > 0) gsms.push(rows[i].specGsm);
+  if (gsms.length){
+    gsms.sort(function(a,b){ return a-b; });
+    html += '<div class="card"><h3>📊 GSM distribution</h3>';
+    html += T(['Percentile','GSM'], [
+      ['P10', qt(gsms, .1)],
+      ['P25', qt(gsms, .25)],
+      ['P50 · median', qt(gsms, .5)],
+      ['P75', qt(gsms, .75)],
+      ['P90', qt(gsms, .9)]
+    ]);
+    html += '<div class="mu">'+gsms.length+' rows have GSM data.</div></div>';
+  }
+
+  /* Pack quantity distribution */
+  var packs = [];
+  for (var i = 0; i < rows.length; i++) if (rows[i].specPack > 0) packs.push(rows[i].specPack);
+  if (packs.length){
+    packs.sort(function(a,b){ return a-b; });
+    html += '<div class="card"><h3>📦 Pack quantity distribution</h3>';
+    html += T(['Percentile','Labels per packet'], [
+      ['P10', qt(packs, .1)],
+      ['P25', qt(packs, .25)],
+      ['P50 · median', qt(packs, .5)],
+      ['P75', qt(packs, .75)],
+      ['P90', qt(packs, .9)]
+    ]);
+    html += '<div class="mu">'+packs.length+' rows have pack data.</div></div>';
+  }
+
+  /* Best performing spec combos — group by product type + material + printing */
+  var combos = new Map();
+  for (var i = 0; i < rows.length; i++){
+    var r = rows[i];
+    if (!r.specPtype && !r.specMaterial && !r.specPrinting) continue;
+    var key = [r.specPtype||'—', r.specMaterial||'—', r.specPrinting||'—'].join(' · ');
+    if (!combos.has(key)) combos.set(key, { n:0, v:0, orders:[] });
+    var c = combos.get(key);
+    c.n++;
+    c.v += r.total;
+    c.orders.push(r);
+  }
+  var comboList = [];
+  combos.forEach(function(c, k){ comboList.push([k, c]); });
+  comboList.sort(function(a,b){ return b[1].v - a[1].v; });
+
+  if (comboList.length){
+    html += '<h2>🏆 Top combinations (Type · Material · Printing)</h2>';
+    html += '<div class="card">';
+    html += T(['Combination','Orders','Value','Median unit'],
+      comboList.slice(0, 20).map(function(c){
+        return [
+          esc(c[0].slice(0, 60)),
+          c[1].n,
+          fm(c[1].v),
+          r2(med(c[1].orders))
+        ];
+      }));
+    html += '</div>';
+  }
+
+  /* Active spec filters — how to know you're seeing a filtered slice */
+  var activeSpec = 0;
+  for (var k in MX) if (k.indexOf('spec') === 0 && MX[k]) activeSpec++;
+  if (activeSpec){
+    html = '<div class="info"><b>You have '+activeSpec+' spec filter'+(activeSpec>1?'s':'')+' active.</b> Showing sliced view. <a href="javascript:mxClearAll();show()" style="color:var(--pr);font-weight:600">Clear spec filters →</a></div>' + html;
+  }
+
+  return html;
+}
+
+/* =========================================================
+   TAB 6 — MASTER ANALYST
    ========================================================= */
 function vAnalyst(){
   var R=mxRows(F);
-
   function uniq(fn){var s=new Set();for(var i=0;i<F.length;i++){var v=fn(F[i]);if(v&&v!=='Unknown'&&v!=='(no size)')s.add(v)}return Array.from(s).sort()}
-
   function nameDropdown(dim,keyFn,nameLookup,label){
     var counts=new Map();
     for(var i=0;i<F.length;i++){var k=keyFn(F[i]);if(!k)continue;counts.set(k,(counts.get(k)||0)+1)}
@@ -671,8 +858,8 @@ function vAnalyst(){
   }
 
   var bar='<div class="card">';
-  bar+='<h3>🔬 Master Analyst — drill into any slice</h3>';
-  bar+='<div class="mu">Names shown; filtering by GSTIN internally.</div>';
+  bar+='<h3>🔬 Master Analyst</h3>';
+  bar+='<div class="mu">Combine any filters (AND).</div>';
   bar+='<div class="bar" style="margin-top:10px">';
   bar+='<label>State <select onchange="MX.state=this.value;show()">'+opts('state',uniq(function(r){return r.bs}))+'</select></label>';
   bar+='<label>Segment <select onchange="MX.seg=this.value;show()">'+opts('seg',SEGMENTS.map(function(s){return s[0]}))+'</select></label>';
@@ -681,7 +868,26 @@ function vAnalyst(){
   bar+='<label>Brand <select onchange="MX.brand=this.value;show()">'+opts('brand',uniq(function(r){return r.brand}))+'</select></label>';
   bar+=nameDropdown('seller',sk,sellerName,'Seller');
   bar+=nameDropdown('buyer',function(r){return r.bg||r.bd},buyerName,'Buyer');
-  bar+='<label>Source <select onchange="MX.src=this.value;show()">'+opts('src',['Bid','Direct','Unknown'])+'</select></label>';
+  bar+='</div>';
+
+  /* Collapsed advanced filters */
+  var specFields = [
+    ['specPtype','Product Type'],['specMaterial','Material'],['specPrinting','Printing'],
+    ['specAdhesive','Adhesive'],['specFinish','Finish'],['specFormat','Format'],
+    ['specDie','Die-Cut'],['specSize','Label Size']
+  ];
+  var hasAnySpec = false;
+  for (var i = 0; i < F.length; i++){ if (F[i].specPtype || F[i].specMaterial || F[i].specPrinting){ hasAnySpec = true; break; } }
+
+  if (hasAnySpec){
+    bar += '<details class="spec"><summary>⚙️ More spec filters ('+specFields.length+' fields)</summary><div class="bar">';
+    specFields.forEach(function(sf){
+      bar += '<label>'+sf[1]+' <select onchange="MX.'+sf[0]+'=this.value;show()">'+opts(sf[0],uniq(function(r){return r[sf[0]]}))+'</select></label>';
+    });
+    bar += '</div></details>';
+  }
+
+  bar+='<div class="bar" style="margin-top:10px">';
   bar+='<button class="s" onclick="mxClearAll()">✕ Clear ('+mxActiveCount()+')</button>';
   bar+='<button class="s" onclick="mxExportCSV()">⬇ Export slice</button>';
   bar+='</div>';
@@ -693,7 +899,8 @@ function vAnalyst(){
       var nm=MX[k];
       if(k==='seller')nm=sellerName(MX[k]);
       else if(k==='buyer')nm=buyerName(MX[k]);
-      bar+='<span class="crumb" onclick="mxClearOne(\''+k+'\')">'+k+': '+esc(String(nm).slice(0,40))+' <span class="x">✕</span></span>';
+      var friendly = k.replace('spec','');
+      bar+='<span class="crumb" onclick="mxClearOne(\''+k+'\')">'+friendly+': '+esc(String(nm).slice(0,35))+' <span class="x">✕</span></span>';
     }
     bar+='</div>';
   }
@@ -704,13 +911,12 @@ function vAnalyst(){
   var tot=sum(R,'total'),n=R.length;
   var nBuyers=new Set(R.map(function(r){return r.bg||r.bd})).size;
   var nSellers=new Set(R.map(function(r){return sk(r)})).size;
-  var medP=ps(R).p50;
 
   var kpis='<div class="card"><div class="kpis">';
   kpis+='<div class="kpi"><b>'+fm(tot)+'</b><span>Slice value</span></div>';
   kpis+='<div class="kpi"><b>'+n+'</b><span>Orders</span></div>';
   kpis+='<div class="kpi"><b>'+fm(tot/n)+'</b><span>Avg order</span></div>';
-  kpis+='<div class="kpi"><b>'+r2(medP)+'</b><span>Median unit</span></div>';
+  kpis+='<div class="kpi"><b>'+r2(med(R))+'</b><span>Median unit</span></div>';
   kpis+='<div class="kpi"><b>'+nBuyers+'</b><span>Buyers</span></div>';
   kpis+='<div class="kpi"><b>'+nSellers+'</b><span>Sellers</span></div>';
   kpis+='</div></div>';
@@ -731,7 +937,7 @@ function vAnalyst(){
       return[link,fm(x.v),pc(x.share),x.n,x.buyers,x.sellers,L(x.avg),r2(x.p50)]
     });
     return '<div class="card"><h3>'+label+' <span class="mu">('+rows.length+')</span></h3>'+
-      T(['Name'+((dim)?' — click to filter':''),'Revenue','Share','Orders','Buyers','Sellers','Avg ₹','Median ₹'],body)+
+      T(['Name'+((dim)?' — click':''),'Revenue','Share','Orders','Buyers','Sellers','Avg ₹','Median ₹'],body)+
       '</div>'
   }
 
@@ -743,11 +949,10 @@ function vAnalyst(){
   html+=breakdown('seller',function(r){return sk(r)},sellerName,'🥊 Sellers');
   html+=breakdown('cat',function(r){return r.cat},null,'🏷️ Types');
   html+=breakdown('size',function(r){return r.size},null,'📐 Sizes');
-  html+=breakdown('brand',function(r){return r.brand},null,'🏭 Brands');
   html+='</div>';
 
   var sample=R.slice().sort(function(a,b){return b.total-a.total}).slice(0,80);
-  html+='<div class="card"><h3>📋 Sample (top 80 by value)</h3>';
+  html+='<div class="card"><h3>📋 Sample (top 80)</h3>';
   html+=T(['Date','Buyer','Segment','State','Seller','Type','Size','Product','Qty','Unit ₹','Total ₹'],
     sample.map(function(r){return[r.date,esc((r.bd||r.bg).slice(0,26)),esc(r.seg.slice(0,18)),esc(r.bs),esc(r.seller.slice(0,24)),esc(r.cat),esc(r.size),esc(r.prod.slice(0,40)),L(r.qty),r.unit,L(r.total)]}));
   html+='</div>';
@@ -756,46 +961,50 @@ function vAnalyst(){
 
 function mxExportCSV(){
   var R=mxRows(F);
-  var rows=[['Date','Buyer','BuyerGSTIN','Segment','State','Seller','SellerGSTIN','Category','Size','Brand','Product','Qty','UnitPrice','Total','Source']];
-  R.forEach(function(r){rows.push([r.date,r.bd,r.bg,r.seg,r.bs,r.seller,r.sg,r.cat,r.size,r.brand,r.prod,r.qty,r.unit,r.total,r.src])});
+  var headers=['Date','Buyer','BuyerGSTIN','Segment','State','Seller','SellerGSTIN','Category','Size','Brand','Product','Qty','UnitPrice','Total','Source','ProductType','Material','Printing','Adhesive','Finish','Format','DieCut','GSM','SpecSize','Pack'];
+  var rows=[headers];
+  R.forEach(function(r){
+    rows.push([r.date,r.bd,r.bg,r.seg,r.bs,r.seller,r.sg,r.cat,r.size,r.brand,r.prod,r.qty,r.unit,r.total,r.src,
+      r.specPtype,r.specMaterial,r.specPrinting,r.specAdhesive,r.specFinish,r.specFormat,r.specDie,r.specGsm,r.specSize,r.specPack]);
+  });
   function q(v){return'"'+String(v==null?'':v).replace(/"/g,'""')+'"'}
   dl(rows.map(function(r){return r.map(q).join(',')}).join('\n'),'gem_slice_'+new Date().toISOString().slice(0,10)+'.csv','text/csv')
 }
 
 /* =========================================================
-   TAB 6 — DATA QUALITY
+   TAB 7 — DATA QUALITY
    ========================================================= */
 function vDQ(){
   var dq=dqReport(F);
   var html='';
-  html+='<div class="hero"><h2>🔍 Data Quality Report</h2>';
+  html+='<div class="hero"><h2>🔍 Data Quality</h2>';
   html+='<div class="kpis">';
-  html+='<div class="kpi"><b>'+dq.totalRows.toLocaleString('en-IN')+'</b><span>Rows in slice</span></div>';
-  html+='<div class="kpi"><b>'+fm(dq.recon)+'</b><span>Sum of "Price (Incl.)" column</span><small>should match source Excel pivot total</small></div>';
-  html+='<div class="kpi"><b>'+r2(dq.p50)+'</b><span>Median unit price (clean rows only)</span></div>';
+  html+='<div class="kpi"><b>'+dq.totalRows.toLocaleString('en-IN')+'</b><span>Rows</span></div>';
+  html+='<div class="kpi"><b>'+fm(dq.recon)+'</b><span>Sum total</span><small>should match source pivot</small></div>';
+  html+='<div class="kpi"><b>'+r2(dq.p50)+'</b><span>Median unit</span></div>';
   html+='</div></div>';
 
-  html+='<h2>⚠️ Issues found</h2>';
+  html+='<h2>⚠️ Issues</h2>';
   html+='<div class="card">'+T(['Issue','Count','Severity'],
     dq.issues.map(function(x){
       var sev=x[2]==='r'?pill('Critical','r'):x[2]==='a'?pill('Warning','a'):pill('Info','g');
       return[esc(x[0]),'<b>'+x[1]+'</b>',sev]
     }))+'</div>';
 
-  html+='<h2>📖 KPI definitions used</h2>';
+  html+='<h2>📖 KPI definitions</h2>';
   html+='<div class="card"><ul style="line-height:1.9;padding-left:18px">';
-  html+='<li><b>Recorded transaction value</b> = sum of "Price (Inclusive of All Duties & Taxes) - INR" for filtered rows where the value is present and >0.</li>';
-  html+='<li><b>Unit price</b> = "Unit Price" column, excluding rows where it is missing, zero, or negative.</li>';
-  html+='<li><b>Median unit price</b> = P50 of clean unit prices in the current slice.</li>';
-  html+='<li><b>Unique buyers</b> = distinct buyer GSTINs; if GSTIN missing, buyer name is used.</li>';
-  html+='<li><b>Unique sellers</b> = distinct seller GSTINs; if GSTIN missing, seller name is used.</li>';
-  html+='<li><b>Repeat buyer</b> = buyer with ≥2 distinct purchase dates in the slice.</li>';
-  html+='<li><b>Reorder cycle estimate</b> = average days between distinct purchase dates. Requires ≥3 distinct dates to be shown.</li>';
-  html+='<li><b>Opportunity score</b> = weighted blend of recency, frequency, historical value, product fit (neutral for now), competition (fewer sellers = higher), and data confidence. Weights are adjustable in Command Centre.</li>';
+  html+='<li><b>Recorded transaction value</b> = sum of "Price (Inclusive of All Duties & Taxes)" for filtered rows where value > 0.</li>';
+  html+='<li><b>Unit price</b> excludes rows where unit missing, zero, or negative.</li>';
+  html+='<li><b>Median unit price</b> = P50 of clean unit prices in slice.</li>';
+  html+='<li><b>Unique buyers</b> = distinct buyer GSTINs; falls back to name if GSTIN missing.</li>';
+  html+='<li><b>Repeat buyer</b> = ≥2 distinct purchase dates.</li>';
+  html+='<li><b>Reorder cycle</b> = avg days between distinct purchase dates. Shown only with ≥3 dates.</li>';
+  html+='<li><b>Opportunity score</b> = weighted blend. Weights adjustable in Command Centre.</li>';
+  html+='<li><b>Product specs</b> = extracted from columns matching "Product Type", "Material", "Printing", etc. — fuzzy header match.</li>';
   html+='</ul></div>';
 
-  html+='<h2>💾 Data storage warning</h2>';
-  html+='<div class="warn">Your master data is stored only in this browser\'s localStorage. <b>Back up regularly</b> using the "⬇ Backup JSON" button at the top — clearing the browser cache or switching devices will lose your data.</div>';
+  html+='<h2>💾 Data storage</h2>';
+  html+='<div class="warn">Data lives in this browser\'s localStorage. Back up with "⬇ Backup JSON".</div>';
 
   return html
 }
@@ -807,7 +1016,8 @@ var TABS={
   cmd:'🎯 Command Centre',
   map:'📍 Market Map',
   buyers:'📞 Target Buyers',
-  comp:'🥊 Competitors & Price',
+  comp:'🥊 Competitors',
+  spec:'🏷️ Product Specs',
   mx:'🔬 Master Analyst',
   dq:'🔍 Data Quality'
 };
@@ -816,6 +1026,7 @@ var V={
   map:[vMap,dMap],
   buyers:[vBuyers],
   comp:[vComp],
+  spec:[vSpec],
   mx:[vAnalyst],
   dq:[vDQ]
 };
@@ -841,10 +1052,11 @@ function show(){
 }
 
 function apply(){
-  var f=$('from').value,t=$('to').value;
+  var f=$('from').value,t=$('to').value,m=MODE;
   F=ALL.filter(function(r){
     if(f&&r.date<f)return false;
     if(t&&r.date>t)return false;
+    if(m&&r.src!==m)return false;
     return true
   });
   show()
@@ -881,9 +1093,7 @@ function exportXLSX(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Sg),'Segments');
   var G1=geoList(F).map(function(g){return{State:g.s,EntryScore:g.ease,MarketValue:g.v,Orders:g.n,Buyers:g.b,Sellers:g.sl,Median:Math.round(g.p50)}});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(G1),'States');
-  var dq=dqReport(F);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dq.issues.map(function(x){return{Issue:x[0],Count:x[1],Severity:x[2]}})),'DataQuality');
-  var recs=F.map(function(r){return{Date:r.date,Buyer:r.bd,GSTIN:r.bg,Segment:r.seg,State:r.bs,Seller:r.seller,Cat:r.cat,Size:r.size,Brand:r.brand,Product:r.prod,Qty:r.qty,UnitPrice:r.unit,Total:r.total,Source:r.src,Flags:r.flags.join(';')}});
+  var recs=F.map(function(r){return{Date:r.date,Buyer:r.bd,GSTIN:r.bg,Segment:r.seg,State:r.bs,Seller:r.seller,Cat:r.cat,Size:r.size,Brand:r.brand,Product:r.prod,Qty:r.qty,UnitPrice:r.unit,Total:r.total,Source:r.src,ProductType:r.specPtype,Material:r.specMaterial,Printing:r.specPrinting,Adhesive:r.specAdhesive,Finish:r.specFinish,Format:r.specFormat,DieCut:r.specDie,GSM:r.specGsm,SpecSize:r.specSize,Pack:r.specPack,Flags:r.flags.join(';')}});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(recs),'Records');
   XLSX.writeFile(wb,'gem_consultant_'+new Date().toISOString().slice(0,10)+'.xlsx')
 }
@@ -934,6 +1144,7 @@ function handle(f){
 
 $('tabs').addEventListener('click',function(e){var t=e.target.dataset&&e.target.dataset.t;if(t){TAB=t;show()}});
 $('me').addEventListener('change',function(e){ME=e.target.value;ls.s('gem_me',ME);show()});
+$('mode').addEventListener('change',function(e){MODE=e.target.value;apply()});
 ['from','to'].forEach(function(i){$(i).addEventListener('change',apply);$(i).addEventListener('input',apply)});
 $('xls').addEventListener('click',function(){if(ALL.length)exportXLSX()});
 $('jsn').addEventListener('click',function(){if(ALL.length)dl(JSON.stringify(ALL),'gem_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json')});
